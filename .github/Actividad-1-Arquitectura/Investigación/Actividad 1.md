@@ -10,7 +10,8 @@ R/ Un conjunto de instrucciones que un computador sigue para realizar una tarea 
 R/Un lenguaje que usa claves simbolicas para representar instrucciones que un computador entienda
 ¿Qué es un lenguaje de máquina?
 R/Es un conjunto de instrucciones escritas en un codigo binario que una computadora representa directamente.
-¿Qué son PC, D Y A?
+
+**¿Qué son PC, D Y A?**
 
 A: Es un registro que puede almacenar una dirección de memoria o un valor constante.
 D: Es un registro de propósito general usado para cálculos temporales.

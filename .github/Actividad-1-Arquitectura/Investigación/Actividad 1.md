@@ -30,6 +30,13 @@ Usa D para guardar resultados intermedios y realizar operaciones aritméticas/l�
 Usa PC para llevar el control del flujo de ejecución, actualizándolo en cada ciclo o con saltos.
 
 **Actividad 04**
-
+**Código:**
+```
+@100
+D=A
+@32
+M=D
+```
 <img width="994" height="436" alt="image" src="https://github.com/user-attachments/assets/e0668195-9b63-4153-b33e-a890b85a1cd4" />
+
 

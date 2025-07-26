@@ -1,10 +1,10 @@
-**Actividad 05**
-1.
+**Actividad 05**  
+**1.**
 ```
 @1978
 D=A
 ```
-2.Guarda en la posición 100 de la RAM el número 69.
+**2.Guarda en la posición 100 de la RAM el número 69.**
 
 ```
 @69 
@@ -13,7 +13,7 @@ D=A
 M=D 
 ```
 
-3. Guarda en la posición 200 de la RAM el contenido de la posición 24 de la RAM
+**3. Guarda en la posición 200 de la RAM el contenido de la posición 24 de la RAM**
 
 ```
 @90
@@ -22,7 +22,7 @@ D=A
 M=D
 @200
 ```
-4. Lee lo que hay en la posición 100 de la RAM, resta 15 y guarda el resultado en la posición 100 de la RAM.
+**4. Lee lo que hay en la posición 100 de la RAM, resta 15 y guarda el resultado en la posición 100 de la RAM.**
 
 ```
 M=D 
@@ -31,7 +31,7 @@ D=A
 @100
 M=M-D 
 ```
-5. Suma el contenido de la posición 0 de la RAM, el contenido de la posición 1 de la RAM y con la constante 69. Guarda el resultado en la posición 2 de la RAM.
+**5. Suma el contenido de la posición 0 de la RAM, el contenido de la posición 1 de la RAM y con la constante 69. Guarda el resultado en la posición 2 de la RAM.**
 
 ```
 @1
@@ -44,12 +44,12 @@ D=D+A
 M=D
 ```
 
-6. Si el valor almacenado en D es igual a 0 salta a la posición 100 de la ROM.
+**6. Si el valor almacenado en D es igual a 0 salta a la posición 100 de la ROM.**  
 ```
 @100
 D;JEQ
 ```
-7. Si el valor almacenado en la posición 100 de la RAM es menor a 100 salta a la posición 20 de la ROM.
+**7. Si el valor almacenado en la posición 100 de la RAM es menor a 100 salta a la posición 20 de la ROM.**  
 ```
 @100
 D=A
@@ -65,13 +65,13 @@ D;JLT
 **8.**
 
 **¿Qué hace este programa?**  
-R/ El programa suma el valor almacenado en `var1` con el valor de `var2` y guarda el resultado en `var3`.
+**R/** El programa suma el valor almacenado en `var1` con el valor de `var2` y guarda el resultado en `var3`.
 
 **¿En qué posición de la memoria está `var1`, `var2` y `var3`? ¿Por qué en esas posiciones?**  
-R/ `var1` está en la posición 16, `var2` en la 17 y `var3` en la 18. Esto pasa porque el ensamblador asigna automáticamente las variables a partir de la dirección 16 de la RAM cuando no se definen previamente.
+**R/** `var1` está en la posición 16, `var2` en la 17 y `var3` en la 18. Esto pasa porque el ensamblador asigna automáticamente las variables a partir de la dirección 16 de la RAM cuando no se definen previamente.
 
 **9.¿Qué hace este programa?**  
-R/ Inicializa i en 1 y sum en 0, luego le suma i a sum y aumenta i en 1.
+**R/** Inicializa i en 1 y sum en 0, luego le suma i a sum y aumenta i en 1.
 
 **¿En qué parte de la memoria RAM está la variable i y sum? ¿Por qué en esas posiciones?**  
 **R/** i está en la posición 16 y sum en la 17. Esto ocurre porque el ensamblador asigna automáticamente las variables simbólicas no predefinidas a partir de la RAM[16].
@@ -83,7 +83,7 @@ R/**
 M=M+1
 ```
 **10. Escribe un programa en lenguaje ensamblador que guarde en R1 la operación 2 * R0.**
-R/
+**R/**
 ```
 @R0
 D=M
@@ -110,7 +110,7 @@ M=D
 **¿Cuál es la diferencia entre los símbolos i y CONT?**  
 **R/** i es una variable que se almacena en la RAM, mientras que CONT es una etiqueta que representa una posición en la ROM usada para controlar el flujo del programa.
 
-12. Implemente en ensamblador: R4 = R1 + R2 + 69
+**12. Implemente en ensamblador: R4 = R1 + R2 + 69**
 ```
 @R2
 D=M
@@ -121,9 +121,9 @@ D=D+A
 @R4
 M=D
 ```
-13. Implementa en ensamblador: if R0 >= 0 then R1 = 1 else R1 = -1
+**13. Implementa en ensamblador: if R0 >= 0 then R1 = 1 else R1 = -1
 (LOOP)
-goto LOOP
+goto LOOP**  
 ```
 @R0
 D=M
@@ -141,7 +141,7 @@ M=-1
 @LOOP
 0;JMP
 ```
-14. Implementa en ensamblador: R4 = RAM[R1]
+**14. Implementa en ensamblador: R4 = RAM[R1]**
 ```
 @R1
 A=M
@@ -149,7 +149,7 @@ D=M
 @R4
 M=D
 ```
-15. Implementa en ensamblador el siguiente problema. En la posición R0 está almacenada la dirección inicial de una región de memoria. En la posición R1 está almacenado el tamaño de la región de memoria. Almacena un -1 en esa región de memoria.
+**15. Implementa en ensamblador el siguiente problema. En la posición R0 está almacenada la dirección inicial de una región de memoria. En la posición R1 está almacenado el tamaño de la región de memoria. Almacena un -1 en esa región de memoria.**
 ```
 @R0
 D=M
@@ -183,7 +183,9 @@ for (int j = 0; j < 10; j++) {
     sum = sum + arr[j];
 }
 ```
-R/
+
+**R/**
+
 ```
 @0
 D=A
@@ -222,7 +224,7 @@ M=M+1
 0;JMP
 (END)
 ```
-18. **Utiliza esta herramienta para dibujar un bitmap en la pantalla.**  
+**18. Utiliza esta herramienta para dibujar un bitmap en la pantalla.**  
 **R/** <img width="971" height="523" alt="image" src="https://github.com/user-attachments/assets/ef80adb9-5ebc-4677-8ed1-d9fb9aa38ea1" />
 
 **19. Analiza el siguiente programa en lenguaje de máquina:**

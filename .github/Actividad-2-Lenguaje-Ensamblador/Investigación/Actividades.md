@@ -1,3 +1,10 @@
+### Actividad 1
+
+- ¿Qué es la entrada-salida mapeada a memoria?
+- ¿Cómo se implementa en la plataforma Hack?
+- Inventa un programa que haga uso de la entrada-salida mapeada a memoria.
+- Investiga el funcionamiento del programa con el simulador.
+
 ### Actividad 3
 
 Vas a implementar y simular una modificación al reto 20 de la unidad anterior. Si se presiona la letra “d” muestras la imagen que diseñaste en el reto 18. Si no se presiona ninguna tecla, borrarás la imagen.

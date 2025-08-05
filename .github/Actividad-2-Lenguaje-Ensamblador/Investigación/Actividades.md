@@ -1,4 +1,4 @@
-c### Actividad 1
+### Actividad 1
 
 - **¿Qué es la entrada-salida mapeada a memoria?**
 **R/** La entrada-salida mapeada a memoria (o memory-mapped I/O) es una técnica donde ciertos rangos de la memoria RAM están reservados para representar dispositivos de entrada y salida, como la pantalla o el teclado. Es decir, en vez de usar instrucciones especiales para controlar estos dispositivos, simplemente se leen o escriben valores en direcciones específicas de memoria y eso automáticamente interactúa con el hardware.

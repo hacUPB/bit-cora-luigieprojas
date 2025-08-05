@@ -24,3 +24,13 @@ While (i <= 100){
 Por ejemplo, si i está en RAM[16], entonces su dirección es 16, y así sabemos dónde buscar o guardar su valor.
 - **¿Qué es el contenido de una variable?**
 - **R/** El contenido de una variable es el valor que está almacenado en su dirección de memoria. Por ejemplo, si i está en RAM[16] y en ese momento tiene el valor 5, entonces el contenido de la variable i es 5. Ese valor puede cambiar durante el programa (como cuando se incrementa i++).
+
+**2. Transforma el programa en alto nivel anterior para que utilice un ciclo for en vez de un ciclo while.**
+**R/** 
+```
+int sum = 0;
+for (int i = 1; i <= 100; i++) {
+    sum += i;
+}
+```
+ 

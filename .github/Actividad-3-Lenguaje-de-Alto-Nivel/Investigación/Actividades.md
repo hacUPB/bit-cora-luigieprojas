@@ -85,3 +85,79 @@ Analicemos juntos este código:
 - R/ En este caso no hace nada todavía. Supongo que es el espacio donde normalmente irían cálculos o actualizaciones de movimiento más complejos, pero aquí lo dejamos vacío.
 - ¿Qué hace la función draw?
 - R/ Aquí es donde se dibuja todo lo que vemos en pantalla. Recorre la lista de partículas y, para cada una, dibuja un círculo en la posición guardada, con el color que tengamos activo. Es la parte que convierte la lógica en algo visual.
+
+### Actividad 3
+
+Analiza la aplicación anterior. 
+1. ¿Qué hace cada función?
+2. ¿Qué hace cada línea de código?
+3. Realiza un experimento con la aplicación anterior. Modifica alguna parte importante de su código.
+
+R/ setup(): se ejecuta al inicio, pone el fondo negro y define el color inicial de las partículas en blanco.
+
+update(): está vacío en este caso, pero es donde normalmente se harían cálculos o se actualizarían variables que cambian con el tiempo.
+
+draw(): se encarga de recorrer la lista de partículas y dibujar los círculos en las posiciones que se han guardado. Es la parte visual de la aplicación.
+
+mouseMoved(): cada vez que movemos el mouse guarda la nueva posición en la lista de partículas, y si ya hay más de 100, borra la primera para que el rastro no sea infinito.
+
+mousePressed(): cuando hacemos clic cambia el color de todas las partículas por uno nuevo, generado de manera aleatoria.
+
+R/ ofBackground(0); → pinta el fondo de negro al inicio.
+
+particleColor = ofColor::white; → establece el color inicial en blanco.
+
+for(auto &pos: particles){ ... } → recorre todas las posiciones guardadas en la lista de partículas.
+
+ofSetColor(particleColor); → define el color con el que se dibujará el círculo.
+
+ofDrawCircle(pos.x, pos.y, 50); → dibuja un círculo en la posición del mouse con radio 50.
+
+particles.push_back(ofVec2f(x, y)); → agrega la posición actual del mouse a la lista.
+
+if (particles.size() > 100) { particles.erase(particles.begin()); } → borra la partícula más vieja cuando ya hay más de 100 guardadas.
+
+particleColor = ofColor(ofRandom(255), ofRandom(255), ofRandom(255)); → genera un color nuevo y lo aplica a todas las partículas al hacer clic.
+
+R/ Yo modifique mi codigo haciendo que el circulo que esta con el puntero en lugar de ser estatico, vaya cambiando de tamaño.
+
+Originalmente estaba esta línea:
+
+```
+ofDrawCircle(pos.x, pos.y, 50);
+```
+
+Y la dejamos así:
+
+```
+ofDrawCircle(pos.x, pos.y, ofRandom(10, 60));
+
+```
+En lugar de dibujar siempre círculos del mismo tamaño (radio 50), ahora cada vez que se dibuja un círculo se elige un tamaño aleatorio entre 10 y 60. Eso hace que la estela tenga círculos grandes, medianos o pequeños, y que cambien constantemente sin necesidad de código extra complicado.
+
+### Actividad 5
+
+En la unidad anterior introdujimos el concepto de puntero. Ahora vamos a profundizar en este concepto de manera práctica.
+
+El siguiente ejemplo se supone (en la actividad que sigue vas a corregir un error) que te permite seleccionar una espera y moverla con el mouse.
+
+Responde:
+
+- ¿Cuál es la definición de un puntero?
+- R/ Un puntero es una variable especial que no guarda directamente un valor normal como un número o un texto, sino que guarda la dirección en memoria de otro objeto o variable. Es decir, apunta hacia dónde está guardado algo para poder acceder a él o manipularlo de manera indirecta.
+- ¿Dónde está el puntero
+- R/ En este código el puntero está en la clase ofApp, con esta línea:
+```
+Sphere* selectedSphere;
+```
+Aquí selectedSphere es un puntero, porque en vez de ser una esfera directamente, apunta a una esfera que está en el vector spheres.
+- ¿Cómo se inicializa el puntero?
+- R/ El puntero se inicializa en el setup():
+  ```
+  selectedSphere = nullptr;
+  ```
+  Esto significa que al inicio no está apuntando a ninguna esfera en particular (está vacío). Más adelante, cuando damos clic, cambia para apuntar a una esfera específica.
+- ¿Para qué se está usando el puntero?
+- R/ El puntero se usa para recordar cuál esfera hemos seleccionado con el mouse. Así, en el update() el programa sabe cuál esfera debe moverse siguiendo el puntero del mouse. Sin puntero, sería más complicado saber cuál esfera mover de todas las que están en la pantalla.
+- ¿Qué es exactamente lo que está almacenado en el puntero?
+- R/ En el puntero no está guardada la esfera como tal, sino la dirección de memoria donde está la esfera que seleccionamos. O sea, es como si tuviéramos la dirección de una casa: no tenemos la casa dentro del bolsillo, pero sí la dirección que nos dice dónde ir a buscarla. 

@@ -558,3 +558,8 @@ ofColor ofApp::colorFromHeight(float z) const {
     }
 }
 ```
+Adjunto Captura del reto solucionado:
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-08-26 075529" src="https://github.com/user-attachments/assets/1035130b-3384-4c72-98ab-1d66bdaa650b" />
+
+Link vídeo de prueba reto: https://youtu.be/qrICHl8hT5w 

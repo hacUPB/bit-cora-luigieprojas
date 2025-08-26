@@ -558,7 +558,27 @@ ofColor ofApp::colorFromHeight(float z) const {
     }
 }
 ```
-Adjunto Captura del reto solucionado:
+INFORME:
+
+En la aplicación del reto que desarrollé en openFrameworks para generar superficies dinámicas tipo “wave surface”, tuve en cuenta el manejo de memoria y la ubicación de los datos clave en las diferentes regiones de la memoria de un programa en C++.
+
+En primer lugar, declaré variables globales como el step, la amplitud y los valores de distancia o divisores que controlan la forma de la onda. Estas variables se almacenan en memoria global/estática, lo que significa que permanecen disponibles durante toda la ejecución del programa y son fáciles de acceder desde cualquier parte de la aplicación.
+
+Por otro lado, en la clase ofApp declaré arreglos y vectores para calcular las posiciones y colores de cada punto de la malla. Estos objetos están ligados a la instancia de la aplicación, por lo tanto, se encuentran en el heap, ya que se crean dinámicamente cuando inicializo la ventana y permanecen allí mientras dure la ejecución. Esto permite manejar un número grande de puntos sin que se liberen de manera automática al salir de una función.
+
+También, dentro de funciones como draw() y update(), se generan variables locales de apoyo, por ejemplo los índices de los bucles o valores temporales para las posiciones de cada vértice. Estos se almacenan en el stack, lo que significa que se crean y destruyen automáticamente cada vez que la función se ejecuta. Son datos de vida corta, que no necesitan persistir más allá del ciclo de dibujo.
+
+En conclusión, el manejo de memoria en mi aplicación combina las tres áreas:
+
+Global para parámetros de control que se requieren todo el tiempo.
+
+Heap para estructuras dinámicas como la malla de puntos que representan la superficie.
+
+Stack para variables temporales de cálculo dentro de cada iteración de update() y draw().
+
+De esta manera, el programa es eficiente y organiza bien sus recursos dependiendo de la duración y el uso de cada tipo de dato.
+
+**Adjunto Captura del reto solucionado:**
 
 <img width="1365" height="767" alt="Captura de pantalla 2025-08-26 075529" src="https://github.com/user-attachments/assets/1035130b-3384-4c72-98ab-1d66bdaa650b" />
 

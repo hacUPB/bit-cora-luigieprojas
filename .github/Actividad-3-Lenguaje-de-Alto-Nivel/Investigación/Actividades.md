@@ -161,3 +161,126 @@ Aquí selectedSphere es un puntero, porque en vez de ser una esfera directamente
 - R/ El puntero se usa para recordar cuál esfera hemos seleccionado con el mouse. Así, en el update() el programa sabe cuál esfera debe moverse siguiendo el puntero del mouse. Sin puntero, sería más complicado saber cuál esfera mover de todas las que están en la pantalla.
 - ¿Qué es exactamente lo que está almacenado en el puntero?
 - R/ En el puntero no está guardada la esfera como tal, sino la dirección de memoria donde está la esfera que seleccionamos. O sea, es como si tuviéramos la dirección de una casa: no tenemos la casa dentro del bolsillo, pero sí la dirección que nos dice dónde ir a buscarla. 
+
+### Actividad 6
+
+El código anterior tiene un problema. ¿Puedes identificar cuál es? ¿Cómo lo solucionarías? Recuerda que deberías poder seleccionar una esfera y moverla con el mouse.
+
+**Respuesta/:**
+
+El problema del código está en que, aunque sí permite seleccionar una esfera con el clic, nunca se libera esa selección. En otras palabras, cuando se hace clic sobre una esfera esta queda “pegada” permanentemente al cursor, ya que en update() se actualiza siempre con la posición del mouse, pero no existe ningún evento que indique cuándo soltarla. Esto hace que después de seleccionarla no se pueda dejar fija en un punto.
+
+La solución es implementar la función mouseReleased. De esta manera, cuando el usuario suelte el botón del mouse, se puede poner nuevamente el puntero selectedSphere en nullptr, logrando que la esfera deje de seguir el cursor y quede en su nueva posición. Con este cambio ya se puede seleccionar una esfera con un clic, arrastrarla y luego soltarla correctamente al dejar de presionar el mouse.
+
+Código:
+
+ofApp.h:
+```
+#pragma once
+
+#include "ofMain.h"
+
+class Sphere {
+public:
+    Sphere(float x, float y, float radius);
+    void draw();
+    void update(float x, float y);
+    float getX();
+    float getY();
+    float getRadius();
+
+private:
+    float x, y;
+    float radius;
+    ofColor color;
+};
+
+class ofApp : public ofBaseApp{
+
+    public:
+        void setup();
+        void update();
+        void draw();
+
+        void mouseMoved(int x, int y );
+        void mousePressed(int x, int y, int button);
+        void mouseReleased(int x, int y, int button);   // <-- añadido
+
+    private:
+        vector<Sphere*> spheres;
+        Sphere* selectedSphere;
+};
+```
+ofApp.cpp:
+```
+#include "ofApp.h"
+
+Sphere::Sphere(float x, float y, float radius) : x(x), y(y), radius(radius) {
+    color = ofColor(ofRandom(255), ofRandom(255), ofRandom(255));
+}
+
+void Sphere::draw() {
+    ofSetColor(color);
+    ofDrawCircle(x, y, radius);
+}
+
+void Sphere::update(float x, float y) {
+    this->x = x;
+    this->y = y;
+}
+
+float Sphere::getRadius() { return radius; }
+float Sphere::getX() { return x; }
+float Sphere::getY() { return y; }
+
+//--------------------------------------------------------------
+void ofApp::setup(){
+    ofBackground(0);
+
+    for (int i = 0; i < 5; i++) {
+        float x = ofRandomWidth();
+        float y = ofRandomHeight();
+        float radius = ofRandom(20, 50);
+        spheres.push_back(new Sphere(x, y, radius));
+    }
+    selectedSphere = nullptr;
+}
+
+//--------------------------------------------------------------
+void ofApp::update(){
+    if (selectedSphere != nullptr) {
+        selectedSphere->update(ofGetMouseX(), ofGetMouseY());
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::draw(){
+    for (auto sphere : spheres) {
+        sphere->draw();
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseMoved(int x, int y ){}
+
+//--------------------------------------------------------------
+void ofApp::mousePressed(int x, int y, int button){
+    if(button == OF_MOUSE_BUTTON_LEFT){
+        for (auto sphere : spheres) {
+            float distance = ofDist(x, y, sphere->getX(), sphere->getY());
+            if (distance < sphere->getRadius()) {
+                selectedSphere = sphere;
+                break;
+            }
+        }
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseReleased(int x, int y, int button){
+    if(button == OF_MOUSE_BUTTON_LEFT){
+        selectedSphere = nullptr;   // <-- soltar la esfera
+    }
+}
+```
+

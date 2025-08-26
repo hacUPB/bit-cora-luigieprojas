@@ -309,6 +309,21 @@ void ofApp::createObjectInStack() {
 
 R/ Cuando se modifica la función para crear el objeto en el montón (heap) con new Sphere(...), la situación cambia. Ahora el objeto no se destruye al salir de la función, sino que permanece en memoria hasta que se libere manualmente con delete. De esta manera, el puntero guardado en el vector siempre apunta a un objeto válido y sí se puede acceder a él o dibujarlo correctamente.
 
+## Actividad 09 
+
+- ¿Qué sucede cuando presionas la tecla “f”?
+- Analiza detalladamente esta parte del código:
+
+**Respuesta 1:** Si hay al menos un objeto en heapObjects, el programa libera (delete) el último ofVec2f creado y elimina su puntero del vector. Visualmente la última circunferencia creada desaparece y la memoria ocupada por ese ofVec2f se devuelve al sistema (o queda disponible para el heap). Si no hay objetos, no pasa nada por el if.
+
+**Respuesta 2:** if(!heapObjects.empty()) comprueba que el vector no esté vacío para evitar errores.  
+
+heapObjects.back() devuelve el puntero al último elemento. delete heapObjects.back(); libera la memoria que ese puntero apuntaba (invoca el destructor del ofVec2f y libera el bloque en el heap).  
+
+heapObjects.pop_back(); remueve el puntero del std::vector, reduciendo su tamaño en 1.  
+
+El orden importa: primero delete y luego pop_back. Si hicieras pop_back() primero perderías la referencia al puntero y no podrías liberarlo (memory leak), o si intentaras delete después sin guardar el puntero antes, sería imposible.  
+
 ### Reto
 
 Vas a desarrollar una aplicación que genere una cuadrícula de esferas en un espacio tridimensional y que permita interactuar con ellas a través de la cámara y el ratón. Deberás implementar la lógica para seleccionar una esfera con el ratón y mostrar la información de la esfera seleccionada en la pantalla.

@@ -283,4 +283,28 @@ void ofApp::mouseReleased(int x, int y, int button){
     }
 }
 ```
+### Actividad 7
 
+Ahora te voy a proponer que reflexiones profundamente sobre el manejo de la memoria en un programa. Se trata de un experimento en el que tienes que analizar por qué está funcionando mal.
+
+- ¿Qué sucede cuando presionas la tecla “c”?
+
+R/ Cuando se presiona la tecla “c” en la primera versión del código, aparentemente se crea un objeto Sphere y se guarda en el vector, pero en realidad no funciona correctamente. El motivo es que ese objeto (localSphere) se está creando en la pila (stack) de memoria, lo que significa que solo existe mientras dura la ejecución de la función createObjectInStack(). En cuanto la función termina, la variable local desaparece, y lo único que queda guardado en el vector es un puntero colgante (dangling pointer) que apunta a una zona de memoria que ya no es válida. Por eso, al intentar acceder o dibujar esa esfera después, se obtienen comportamientos extraños o errores.
+
+Realiza esta modificación a la función createObjectInStack donde claramente se está creando un objeto, pero se está creando en el heap y no en el stack, así que no te dejes confundir por el nombre de la función.
+```
+void ofApp::createObjectInStack() {
+    // Sphere localSphere(ofRandomWidth(), ofRandomHeight(), 30);
+    // globalVector.push_back(&localSphere);
+    // ofLog() << "Object created in stack: Position (" << localSphere.x << ", " << localSphere.y << ")";
+    // localSphere.draw();
+    Sphere* heapSphere = new Sphere(ofRandomWidth(), ofRandomHeight(), 30);
+    globalVector.push_back(heapSphere);
+    ofLog() << "Object created in heap: Position (" << heapSphere->x << ", " << heapSphere->y << ")";
+    heapSphere->draw();
+}
+```
+- ¿Qué sucede cuando presionas la tecla “c”?
+- ¿Por qué ocurre esto?
+
+R/ Cuando se modifica la función para crear el objeto en el montón (heap) con new Sphere(...), la situación cambia. Ahora el objeto no se destruye al salir de la función, sino que permanece en memoria hasta que se libere manualmente con delete. De esta manera, el puntero guardado en el vector siempre apunta a un objeto válido y sí se puede acceder a él o dibujarlo correctamente.

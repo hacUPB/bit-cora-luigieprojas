@@ -1,4 +1,4 @@
-**### Actividad 1:**
+### Actividad 1:
 
 En esta actividad vas a experimentar con una aplicación interactiva y listas enlazadas El siguiente código código además incluye la gestión de memoria.
 
@@ -17,23 +17,23 @@ Y con eso lo que yo entendí es que el programa no es solo un dibujo de círculo
 
 ChatGPT me propuso preguntas:
 
-¿Qué ocurriría si la lista solo tuviera un nodo?
+1. ¿Qué ocurriría si la lista solo tuviera un nodo?
 
-¿Qué pasa si nunca se llama a clear() ni al destructor?
+2. ¿Qué pasa si nunca se llama a clear() ni al destructor?
 
-¿Por qué es importante actualizar el puntero tail cuando agregamos un nodo nuevo?
+3. ¿Por qué es importante actualizar el puntero tail cuando agregamos un nodo nuevo?
 
-¿Cómo afecta el método update() a la posición de cada nodo en la lista?
+4. ¿Cómo afecta el método update() a la posición de cada nodo en la lista?
 
 Mis respuestas:
 
-Si hay un solo nodo, la serpiente no tendría cuerpo: solo un círculo que sigue al mouse. Es el caso base de la lista.
+1. Si hay un solo nodo, la serpiente no tendría cuerpo: solo un círculo que sigue al mouse. Es el caso base de la lista.
 
-Si nunca se llama a clear() ni al destructor, cada nodo que se creó con new seguiría ocupando memoria en el heap. Esto genera una fuga de memoria, porque el programa termina sin devolver esos espacios al sistema operativo.
+2. Si nunca se llama a clear() ni al destructor, cada nodo que se creó con new seguiría ocupando memoria en el heap. Esto genera una fuga de memoria, porque el programa termina sin devolver esos espacios al sistema operativo.
 
-Actualizar tail es crucial: si no lo hacemos, el último nodo no apunta al nuevo, y ese nodo se quedaría “desconectado” de la lista. Perderíamos acceso a él y sería prácticamente una fuga porque ya no tendríamos cómo liberarlo después.
+3. Actualizar tail es crucial: si no lo hacemos, el último nodo no apunta al nuevo, y ese nodo se quedaría “desconectado” de la lista. Perderíamos acceso a él y sería prácticamente una fuga porque ya no tendríamos cómo liberarlo después.
 
-El update() funciona como una cadena: la cabeza se mueve a la posición del mouse, y cada nodo siguiente adopta la posición que tenía el nodo anterior. Esto es lo que causa que la serpiente se vea como un cuerpo que sigue en orden.
+4. El update() funciona como una cadena: la cabeza se mueve a la posición del mouse, y cada nodo siguiente adopta la posición que tenía el nodo anterior. Esto es lo que causa que la serpiente se vea como un cuerpo que sigue en orden.
 
 **3. ¿Qué es una lista enlazada y en qué se diferencia de un arreglo en cuanto a la forma en que los elementos están almacenados en la memoria?**
 

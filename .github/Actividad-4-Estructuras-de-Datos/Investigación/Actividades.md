@@ -142,3 +142,285 @@ Prueba de agregar nodos: modificar setup() para crear más o menos nodos y revis
 Prueba de memoria: con el depurador, ver que al llamar clear() no quedan nodos en memoria.
 
 Con esas pruebas confirmo que cada parte funciona como se espera y que no hay fugas.
+
+### Actividad 2
+
+En esta actividad vas a experimentar con pilas y colas en un contexto de arte generativo. El código incluye la gestión de memoria.
+
+El código para la pila es este:
+
+ofApp.h:
+
+```
+#pragma once
+
+#include "ofMain.h"
+
+class Node {
+public:
+    ofVec2f position;
+    Node* next;
+
+    Node(float x, float y) {
+        position.set(x, y);
+        next = nullptr;
+    }
+};
+
+class Stack {
+public:
+    Node* top;
+
+    Stack() {
+        top = nullptr;
+    }
+
+    ~Stack() {
+        clear();
+    }
+
+    void push(float x, float y) {
+        Node* newNode = new Node(x, y);
+        newNode->next = top;
+        top = newNode;
+    }
+
+    void pop() {
+        if (top != nullptr) {
+            Node* temp = top;
+            top = top->next;
+            delete temp;  // Liberar memoria del nodo eliminado
+        }
+    }
+
+    void clear() {
+        while (top != nullptr) {
+            pop();
+        }
+    }
+
+    void display() {
+        Node* current = top;
+        while (current != nullptr) {
+            ofDrawCircle(current->position.x, current->position.y, 20);
+            current = current->next;
+        }
+    }
+};
+
+class ofApp : public ofBaseApp {
+
+public:
+    Stack circleStack;
+
+    void setup();
+    void update();
+    void draw();
+    void keyPressed(int key);
+};
+```
+ofApp.cpp:
+```
+#include "ofApp.h"
+
+//--------------------------------------------------------------
+void ofApp::setup() {
+    ofSetBackgroundColor(220);
+}
+
+//--------------------------------------------------------------
+void ofApp::update() {
+
+}
+
+//--------------------------------------------------------------
+void ofApp::draw() {
+    // Dibujar todos los círculos en la pila
+    circleStack.display();
+}
+
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key) {
+    if (key == 'a') { // Apilar un nuevo círculo
+        circleStack.push(ofGetMouseX(), ofGetMouseY());
+    }
+    else if (key == 'd') { // Desapilar el último círculo
+        circleStack.pop();
+    }
+}
+```
+El código para la cola es este:
+
+ofApp.h:
+```
+#pragma once
+
+#include "ofMain.h"
+
+class Node {
+public:
+    ofVec2f position;
+    Node* next;
+
+    Node(float x, float y) {
+        position.set(x, y);
+        next = nullptr;
+    }
+};
+
+class Queue {
+public:
+    Node* front;
+    Node* rear;
+
+    Queue() {
+        front = rear = nullptr;
+    }
+
+    ~Queue() {
+        clear();
+    }
+
+    void enqueue(float x, float y) {
+        Node* newNode = new Node(x, y);
+        if (rear == nullptr) {
+            front = rear = newNode;
+        }
+        else {
+            rear->next = newNode;
+            rear = newNode;
+        }
+    }
+
+    void dequeue() {
+        if (front != nullptr) {
+            Node* temp = front;
+            front = front->next;
+            if (front == nullptr) {
+                rear = nullptr;
+            }
+            delete temp;  // Liberar memoria del nodo eliminado
+        }
+    }
+
+    void clear() {
+        while (front != nullptr) {
+            dequeue();
+        }
+    }
+
+    void display() {
+        Node* current = front;
+        while (current != nullptr) {
+            ofDrawCircle(current->position.x, current->position.y, 20);
+            current = current->next;
+        }
+    }
+};
+
+class ofApp : public ofBaseApp {
+
+public:
+    Queue circleQueue;
+
+    void setup();
+    void update();
+    void draw();
+    void keyPressed(int key);
+};
+```
+ofApp.cpp:
+```
+#include "ofApp.h"
+
+//--------------------------------------------------------------
+void ofApp::setup() {
+    ofSetBackgroundColor(220);
+}
+
+//--------------------------------------------------------------
+void ofApp::update() {
+
+}
+
+//--------------------------------------------------------------
+void ofApp::draw() {
+    // Dibujar todos los círculos en la cola
+    circleQueue.display();
+}
+
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key) {
+    if (key == 'a') { // Encolar un nuevo círculo
+        circleQueue.enqueue(ofGetMouseX(), ofGetMouseY());
+    }
+    else if (key == 'd') { // Desencolar el primer círculo
+        circleQueue.dequeue();
+    }
+}
+```
+
+1. **Entendiendo la aplicación**: comienza explorando detenidamente cómo funciona el programa. Usa un un modelo del lenguaje como ChatGPT y el depurador para que verifiques las explicaciones que te propone ChatGPT. Puedes escribir el prompt: quiere entender de manera muy detallada el siguiente programa escrito en C++ y el openframeworks. Luego le das el código. Ve preguntando lo que no entiendas. recuerda ir usando al mismo tiempo el depurador de visual studio.
+2. **Realiza evaluaciones formativas**. Dile a ChatGPT que te genere preguntas para verificar si entiendes cómo funciona el programa. Trata de verificar tus hipótesis usando el depurador y luego con las conclusiones del experimento responde la pregunta de ChatGPT. Continúa con este proceso hasta que estés seguro de que entiendes cómo funciona el programa.
+
+R/ Para asegurarte de que entiendes el programa, podrías responder preguntas como estas:
+
+- ¿Qué pasa si llamo a pop() o dequeue() cuando la pila o la cola está vacía?
+- ¿Cómo cambia el valor de top en la pila después de varias operaciones seguidas de push y pop?
+- ¿Qué diferencia visual ves en pantalla al usar pila versus cola?
+- Si metes 5 elementos y luego haces 3 eliminaciones, ¿cuáles deberían quedar y en qué orden?
+- La idea es que corras el programa, hagas esas operaciones y confirmes tus hipótesis usando el depurador (ver cómo cambian los punteros y la memoria).
+
+3. **Pruebas:** pregunta a ChatGPT cómo podrías probar las partes del programa y el programa completo. Luego realiza las pruebas y verifica si los resultados coinciden con tus expectativas.
+
+R/ Esto me respondió ChatGPT: Unas pruebas útiles para este programa serían:
+
+- Agregar y quitar elementos en diferentes órdenes: verificar que la pila se comporte como LIFO y la cola como FIFO.
+- Prueba de vaciado: llenar con varios elementos y luego vaciar completamente. Revisar en el depurador que todos los nodos se borren y que top, front y rear queden en nullptr.
+- Prueba de límites: encolar/apilar muchísimos elementos (20, 50, más) para comprobar que el programa no se crashea y que el dibujo se actualiza correctamente.
+- Prueba de vacíos repetidos: llamar varias veces a pop() o dequeue() cuando ya está vacío, y confirmar que el programa no intenta acceder a memoria inválida.
+- Prueba de destructor: cerrar el programa con nodos todavía en la pila o cola, y revisar que el destructor (con clear()) libere todos los nodos pendientes.
+
+Preguntas de reflexión para el stack:
+
+1. ¿Cómo se gestiona la memoria en una implementación manual de un stack en C++? Reflexiona sobre cómo el uso de new y delete en la creación y destrucción de nodos afecta el rendimiento y la seguridad de tu programa.
+
+R/ En este caso la memoria se gestiona con new y delete. Cada vez que hago un push, creo un nodo en memoria dinámica (new Node) y lo enlazo al tope de la pila. Cuando hago pop, libero ese nodo con delete. O sea, yo mismo soy el responsable de pedir y devolver memoria. Esto da bastante control, pero también significa que si se me olvida liberar algo, se me puede quedar “pegada” la memoria. En programas grandes o que corren mucho tiempo, eso puede afectar rendimiento y hasta tumbar la aplicación.
+
+2. ¿Por qué es importante liberar la memoria cuando se desapila un nodo en un stack? Considera las consecuencias de no liberar memoria en términos de fugas de memoria y cómo esto puede impactar aplicaciones de largo tiempo de ejecución.
+
+R/ Porque si no libero, se produce una fuga de memoria. Eso quiere decir que el nodo se elimina de la pila (ya no tengo cómo acceder a él), pero sigue ocupando memoria. Si el programa crea y borra nodos muchas veces, esas fugas se acumulan y el consumo de memoria crece sin parar. En un programa que dure poco puede no notarse, pero en aplicaciones de largo plazo (como un videojuego, un servidor, o algo interactivo de arte generativo) se vuelve un problema serio.
+
+3. ¿Qué diferencias existen entre usar un stack de la STL (std::stack) y crear un stack manualmente? Explora cómo la abstracción que proporciona la STL puede simplificar la implementación, pero también cómo una implementación manual ofrece mayor control sobre la gestión de recursos.
+
+R/ Con std::stack no tengo que preocuparme de la gestión de memoria ni de implementar nodos, porque la STL ya lo maneja. Eso simplifica mucho el código y evita errores. Pero al hacerlo manualmente, como en este ejemplo, tengo más control: yo decido cómo se conectan los nodos, cómo se liberan, e incluso puedo personalizar el comportamiento (ej. dibujar en pantalla cada nodo). En resumen, STL = práctico y seguro, manual = control total pero más trabajo y riesgo. 
+
+4. ¿Cómo afecta la estructura de un stack al orden de acceso y eliminación de elementos? Analiza cómo la naturaleza LIFO (Last In, First Out) del stack influye en los tipos de problemas que esta estructura de datos puede resolver eficientemente.
+
+R/ Un stack funciona con LIFO (Last In, First Out). Eso significa que el último elemento que meto (push) es el primero que saco (pop). Entonces no puedo acceder a cualquier elemento libremente, solo al de arriba. Eso lo hace útil para problemas como deshacer acciones (undo), análisis de expresiones matemáticas, o manejo de llamados de funciones en un programa (call stack). El orden LIFO es justo lo que resuelve esas situaciones de manera natural.
+
+5. ¿Cómo podrías modificar el stack para almacenar tipos de datos más complejos (e.g., objetos con múltiples atributos) sin causar problemas de memoria? Reflexiona sobre cómo gestionar adecuadamente la memoria para objetos más complejos y cómo esto afectaría tu implementación actual.
+
+R/ Podría cambiar la clase Node para que guarde un objeto más complejo, por ejemplo una clase con varios atributos (color, velocidad, tamaño, etc.). Para evitar problemas de memoria tendría que pensar en si ese objeto necesita memoria dinámica propia. Si fuera así, en el destructor de Node tendría que liberar también esa memoria. Otra opción más segura es usar smart pointers (std::unique_ptr o std::shared_ptr) para que el propio C++ maneje la liberación. En este ejercicio no hace falta tanto, pero en un proyecto real sí sería recomendable.
+
+Preguntas de autoevaluación:
+
+1. ¿Puedo explicar detalladamente cómo funciona el proceso de apilar y desapilar nodos en un stack, incluyendo la gestión de memoria?
+
+R/ Sí. Cuando hago un push, lo que pasa es que creo un nodo nuevo en memoria dinámica con new. Ese nodo guarda la posición del mouse y apunta al nodo que estaba en el tope antes. Después, el tope de la pila cambia a ese nuevo nodo. En cambio, al hacer pop, tomo el nodo que está arriba, lo guardo en un temporal, muevo el tope al siguiente nodo y libero la memoria del temporal con delete. Esa es la clave: crear con new y soltar con delete cada vez que entra o sale un nodo.
+ 
+2. ¿Soy capaz de identificar y corregir una fuga de memoria en una implementación de stack manual?
+
+R/ Creo que sí. Una fuga se da si elimino la referencia a un nodo sin liberar su memoria. Por ejemplo, si en pop quitara el nodo del tope pero no le hiciera delete, ese espacio quedaría perdido. Para corregirlo, basta con liberar justo después de mover el puntero. Otra forma de comprobarlo es correr el programa con varias operaciones y mirar en el depurador si los nodos realmente se destruyen.
+
+3. ¿Puedo modificar el stack para que incluya una función que busque un elemento específico, sin alterar el orden de los elementos apilados?
+
+R/ Sí, se podría. La idea sería recorrer los nodos con un puntero auxiliar, igual que en display(), pero en lugar de dibujar, ir comparando hasta encontrar el valor buscado. Importante: no tocar el puntero top, porque eso sí cambiaría el stack. Solo usar un nodo temporal para avanzar. 
+
+4. ¿Entiendo cómo la estructura LIFO del stack afecta el flujo de datos y puedo dar ejemplos de problemas que se resuelvan mejor con un stack?
+
+R/ Claro. Como todo funciona con “último en entrar, primero en salir”, el stack sirve cuando necesito deshacer cosas en orden inverso, como en un editor de texto (el undo). Otro ejemplo es la evaluación de expresiones matemáticas: las operaciones que entran al final son las que se resuelven primero. También los llamados de funciones en un programa se manejan con un stack (el call stack).
+
+5. ¿Puedo implementar y depurar un stack para tipos de datos más complejos, asegurándome de que no haya fugas de memoria ni errores de puntero?
+
+R/ Podría hacerlo, pero tendría que tener más cuidado. Si el Node guarda un objeto que usa memoria dinámica (ej. un array dentro), tendría que liberar esa memoria en el destructor del nodo. Para no enredarme, usar smart pointers sería más seguro porque ellos liberan automáticamente. Con eso, evito fugas de memoria y me concentro en la lógica del stack.

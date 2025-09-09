@@ -424,3 +424,47 @@ R/ Claro. Como todo funciona con “último en entrar, primero en salir”, el s
 5. ¿Puedo implementar y depurar un stack para tipos de datos más complejos, asegurándome de que no haya fugas de memoria ni errores de puntero?
 
 R/ Podría hacerlo, pero tendría que tener más cuidado. Si el Node guarda un objeto que usa memoria dinámica (ej. un array dentro), tendría que liberar esa memoria en el destructor del nodo. Para no enredarme, usar smart pointers sería más seguro porque ellos liberan automáticamente. Con eso, evito fugas de memoria y me concentro en la lógica del stack.
+
+Preguntas de reflexión para la queue:
+
+1. ¿Cómo se maneja la memoria en una implementación manual de una queue en C++? Reflexiona sobre cómo se gestionan los nodos al encolar y desencolar elementos y las implicaciones en términos de eficiencia y seguridad.
+
+R/ Cuando se trabaja con una queue manual en C++, la memoria se administra dinámicamente cada vez que se encola un nuevo nodo (con new) y se libera al desencolar (con delete). Esto implica estar muy pendiente de no dejar “huérfanos” los nodos, porque si no libero lo que ya no se usa, se generan fugas de memoria. A nivel de eficiencia, el manejo es bastante directo, pero la seguridad depende totalmente de mi cuidado al gestionar los punteros.
+
+2. ¿Qué desafíos específicos presenta la implementación de una queue en comparación con un stack en términos de gestión de memoria? Considera las diferencias en el manejo de punteros front y rear, y cómo estos afectan el proceso de encolado y desencolado.
+
+R/ Una diferencia clave con respecto al stack es que la queue necesita manejar dos punteros: front y rear. Eso lo hace más propenso a errores, porque no solo debo preocuparme por la cabeza, sino también por la cola. En el stack, siempre opero sobre el tope, mientras que en la queue tengo que actualizar dos extremos al mismo tiempo. Este doble control puede generar problemas si no lo hago con cuidado, como perder acceso a elementos o dejar referencias colgando.
+
+3. ¿Cómo afecta la estructura FIFO (First In, First Out) de una queue a su uso en diferentes tipos de problemas? Analiza cómo la estructura FIFO influye en la resolución de problemas donde el orden de procesamiento es crucial, como en sistemas de colas de espera.
+
+R/ La estructura FIFO influye directamente en cómo se usan las colas. Por ejemplo, en sistemas de espera, en simulaciones de procesos o incluso en buffers de comunicación, es crucial que el primero en llegar sea el primero en salir. Justamente esa propiedad garantiza que el orden de procesamiento sea justo y predecible. En comparación con un stack, aquí no puedo “priorizar” al último en entrar, sino que debo respetar la secuencia.
+
+4. ¿Cómo podrías implementar una queue circular y cuál sería su ventaja respecto a una queue lineal en términos de uso de memoria? Reflexiona sobre cómo una queue circular puede mejorar la eficiencia en ciertos contextos y qué cambios serían necesarios en la implementación.
+
+R/ Una queue circular se implementa cuando quiero reutilizar los espacios ya liberados, en lugar de que la cola crezca de manera lineal sin control. Su ventaja principal es el aprovechamiento de memoria, ya que al llegar al final del arreglo puedo volver a usar las posiciones iniciales. Para implementarla, necesito usar operaciones de módulo (%) al mover los índices de front y rear, de forma que cuando lleguen al final, se reinicien automáticamente.
+
+5. ¿Qué problemas podrían surgir si no se gestionan correctamente los punteros front y rear en una queue, y cómo podrías evitarlos? Considera posibles errores como la pérdida de referencias a nodos y cómo una gestión cuidadosa de los punteros puede prevenir estos problemas.
+
+R/ Si no manejo bien los punteros front y rear, puedo tener varios problemas: desde perder la referencia a nodos (lo que crea fugas de memoria), hasta acceder a memoria inválida o incluso romper la lógica de la cola (por ejemplo, que front apunte a nada aunque la cola tenga elementos). La forma de evitar esto es ser riguroso: actualizar siempre ambos punteros en las operaciones de encolar/desencolar y validar constantemente los casos límite, como cuando la cola está vacía o llena. 
+
+Preguntas de autoevaluación:
+
+1. ¿Puedo explicar claramente el proceso de encolar y desencolar nodos en una queue, incluyendo la gestión de memoria?
+
+R/ Sí, tengo claro que al encolar creo un nodo dinámico con new, lo enlazo al final y actualizo el puntero rear. Al desencolar, libero la memoria del nodo que está en el front con delete y muevo ese puntero al siguiente nodo. La clave es nunca perder la referencia antes de liberar, porque ahí es cuando aparecen fugas de memoria.
+
+2. ¿Soy capaz de identificar y corregir problemas relacionados con la gestión de los punteros front y rear en una queue?
+
+R/ Me siento capaz de detectar problemas con front y rear, porque son los puntos más delicados en la implementación. Por ejemplo, si rear no se actualiza bien al encolar, podría quedar apuntando a un nodo viejo. Y si front se pierde, no hay forma de acceder a la cola. Lo importante es revisar bien los casos extremos (cola vacía y cola con un solo elemento), porque ahí suelen aparecer los errores.
+
+3. ¿Puedo modificar la queue para implementar una queue circular, entendiendo cómo esto afectaría la gestión de memoria?
+
+R/ Podría transformar la queue en circular modificando la forma en que se actualizan los punteros: en lugar de crecer indefinidamente, uso módulo (%) para que vuelvan al inicio del arreglo. Esto mejora el uso de memoria porque no necesito estar reservando más espacio o dejando posiciones vacías que ya se podrían reutilizar.
+
+4. ¿Entiendo cómo la estructura FIFO de una queue afecta el flujo de datos y puedo dar ejemplos de problemas que se resuelvan mejor con una queue?
+
+R/ La estructura FIFO define que el primero en llegar es el primero en salir, y eso cambia el tipo de problemas que resuelve. Por ejemplo, en un sistema de turnos o en un buffer de impresión, es crucial mantener el orden de llegada. Si usara un stack en esos casos, el sistema sería injusto o desordenado, porque el último siempre tendría prioridad.
+
+5. ¿Puedo implementar y depurar una queue para tipos de datos más complejos, asegurándome de que no haya fugas de memoria ni errores de puntero?
+
+R/ Sí puedo implementar y depurar una queue para datos más complejos, siempre que tenga cuidado con la memoria. En esos casos no solo debo liberar el nodo, sino también lo que guarde dentro (si es dinámico). La depuración con casos pequeños (cola vacía, un solo nodo, muchos nodos) es fundamental para comprobar que no haya fugas ni errores de punteros.

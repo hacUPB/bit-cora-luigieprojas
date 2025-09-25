@@ -1,5 +1,7 @@
 # Sesión 1
 
+# Introducción a los Objetos
+
 **¿Qué representa la clase Particle?** 
 
 La clase Particle es una plantilla (o plano) que describe cómo debe ser una partícula en este programa. Define que toda partícula tendrá dos atributos (x y y, que representan su posición en un plano 2D) y un comportamiento (move, que permite cambiar esa posición). En sí misma, la clase no ocupa memoria; solo describe la estructura y funciones que tendrán los objetos creados a partir de ella.
@@ -54,13 +56,14 @@ Dentro de Particle::move, el compilador pasa implícitamente this (puntero al ob
 
 Luego de esto ChatGPT me propuso un experimento:
 
-Experimento 1: Representación básica de objetos en memoria 
+# Experimento 1: Representación básica de objetos en memoria 
 
-🎯 Objetivo:
+**🎯 Objetivo:**
 
 Explorar cómo se almacenan los objetos en memoria en C++. Para ello, se crean dos instancias de la clase Particle, se imprime su dirección de memoria, el tamaño del objeto y las direcciones de sus atributos, con el fin de analizar la organización interna de los datos.
 
-📋 Descripción del experimento
+**📋 Descripción del experimento** 
+
 Código completo en main.cpp en un archivo de Visual Studio:
 
 ```
@@ -91,6 +94,7 @@ int main() {
     return 0;
 }
 ```
+
 Se definió la clase: 
 
 ```
@@ -103,17 +107,26 @@ public:
     }
 };
 ```
+
+
+
 Se declararon dos instancias (p1 y p2) y se imprimieron:
 
 - Dirección de cada objeto.
 - Tamaño del objeto (sizeof).
 - Dirección de los atributos x y y.
 
+**📖 Expectativa previa**
+
+Dado que la clase Particle tiene dos atributos float, se espera que el tamaño del objeto (sizeof(Particle)) sea de 8 bytes (4 bytes por cada atributo). Asimismo, se anticipa que los atributos x e y se almacenen de manera contigua en memoria, separados por exactamente 4 bytes.
+En cuanto a las direcciones de p1 y p2, se espera que cada instancia esté ubicada en una región distinta de la memoria de la pila. Sin embargo, debido al alineamiento de memoria que aplica el compilador, es posible que la separación entre ambos objetos no sea exactamente de 8 bytes, sino un valor mayor.
+Finalmente, se prevé que los métodos no ocupen espacio en la instancia, ya que el código de las funciones reside en la sección de texto del programa, no dentro del objeto.
+
 **Vídeo Evidencia Experimento**
 
 https://github.com/user-attachments/assets/3b1a6100-6a78-4d58-80da-28e08266b89b 
 
-🔍 Análisis de resultados
+**🔍 Análisis de resultados**
 
 Ejecución en Visual Studio mostró:
 
@@ -124,6 +137,7 @@ Tamaño de Particle: 8 bytes
 Direccion de p1.x: 00000026405BF9B8
 Direccion de p1.y: 00000026405BF9BC
 ```
+
 - El tamaño de Particle es 8 bytes, correspondiente a dos float de 4 bytes cada uno.
 - Los atributos x e y están almacenados de manera contigua en memoria (direcciones separadas por 4 bytes).
 - La diferencia entre p1 y p2 es de 32 bytes, lo que evidencia que el compilador reserva bloques alineados en la pila, no necesariamente el mínimo tamaño.
@@ -146,9 +160,92 @@ Sí. Normalmente, los atributos de una clase se almacenan en la memoria de forma
 
 sizeof(Particle) indica cuántos bytes ocupa cada objeto en memoria. En este caso debería ser 8 bytes (dos float de 4 bytes cada uno). Si hubiera padding, herencia o punteros internos (por ejemplo, al usar funciones virtual), el tamaño podría ser mayor. 
 
-**Si tengo dos instancias de Particle, ¿cómo se relacionan sus direcciones de memoria?**
+**¿Cómo se almacenan los objetos en memoria en C++?**
+
+Los objetos en C++ se almacenan en memoria mediante asignación en la pila para variables locales (automáticas) con vida limitada, en el montón para datos dinámicos gestionados manualmente con new y delete o por punteros inteligentes, y en la zona de datos/bss para variables globales o estáticas. La asignación en el montón ofrece flexibilidad pero requiere gestión cuidadosa, mientras que la pila es más eficiente para objetos de tamaño fijo y ciclo de vida corto. 
+
+**Si tengo dos instancias de Particle, ¿cómo se relacionan sus direcciones de memoria? ¿Los atributos están contiguos?**
 
 Cada instancia (p1, p2) vive en una zona distinta de la memoria (por ejemplo, en el stack si se declararon como variables locales). Sus direcciones no son contiguas necesariamente; dependen de cómo el compilador organice las variables en el stack. Lo importante es que cada instancia tiene su propio bloque de memoria para x e y. 
+
+Hice ahora la siguiente experimentación:
+
+🔬 Experimento 2: Objetos en arreglos
+🎯 Objetivo
+
+Verificar si los objetos de una clase en C++ se almacenan de forma contigua cuando se crean dentro de un arreglo.
+
+📋 Código usado
+
+```
+#include <iostream>
+using namespace std;
+
+class Particle {
+public:
+    float x, y;
+    void move(float dx, float dy) {
+        x += dx;
+        y += dy;
+    }
+};
+
+int main() {
+    Particle arr[3];  // Array de 3 objetos Particle
+
+    cout << "Tamaño de Particle: " << sizeof(Particle) << " bytes" << endl;
+
+    for (int i = 0; i < 3; i++) {
+        cout << "Direccion de arr[" << i << "]: " << &arr[i] << endl;
+        cout << "  Direccion de arr[" << i << "].x: " << &(arr[i].x) << endl;
+        cout << "  Direccion de arr[" << i << "].y: " << &(arr[i].y) << endl;
+    }
+
+    return 0;
+}
+
+```
+
+📖 Expectativa previa
+
+Sabemos que sizeof(Particle) es de 8 bytes (dos float). Por tanto, esperamos que:
+
+- Cada objeto dentro del arreglo esté separado por exactamente 8 bytes.
+- Los atributos x e y de cada objeto se encuentren contiguos (4 bytes de diferencia).
+- A diferencia de los objetos independientes (Exp. 1), en los arreglos no debería haber espacios extra de alineación entre elementos, ya que los arrays en C++ garantizan almacenamiento secuencial.
+
+**Vídeo evidencia de experimento:**
+
+https://github.com/user-attachments/assets/dc44f2c0-43d3-4be9-b0a1-bb50622c8608 
+
+📊 Resultados obtenidos
+
+```
+Tamaño de Particle: 8 bytes
+Direccion de arr[0]: 000000A2D83BFAC8
+  Direccion de arr[0].x: 000000A2D83BFAC8
+  Direccion de arr[0].y: 000000A2D83BFACC
+Direccion de arr[1]: 000000A2D83BFAD0
+  Direccion de arr[1].x: 000000A2D83BFAD0
+  Direccion de arr[1].y: 000000A2D83BFAD4
+Direccion de arr[2]: 000000A2D83BFAD8
+  Direccion de arr[2].x: 000000A2D83BFAD8
+  Direccion de arr[2].y: 000000A2D83BFADC
+```
+🔍 Análisis de resultados
+
+1. El tamaño del objeto Particle sigue siendo 8 bytes, igual que en el Experimento 1.
+2. La dirección de arr[0], arr[1] y arr[2] aumenta de 8 en 8 bytes, confirmando que los objetos se guardan contiguos en memoria dentro del arreglo.
+3. Dentro de cada objeto, los atributos x e y siguen estando separados por 4 bytes (contiguos).
+4. Se cumple la expectativa de que, en un arreglo, no hay padding extra entre elementos.
+
+🧠 Reflexión
+
+- En un arreglo de objetos, cada elemento se ubica uno al lado del otro en memoria.
+- Esto confirma que los arrays en C++ son estructuras de datos contiguas, lo que permite recorrerlos de manera muy eficiente.
+- Los atributos siguen contiguos dentro de cada objeto, reforzando que un objeto es un bloque compacto de memoria con sus datos.
+
+**Conclusión:** Los arreglos en C++ almacenan sus objetos de manera secuencial y sin espacios extra, cumpliendo con la expectativa. Esto hace que los accesos sean predecibles y rápidos, un aspecto crucial para el diseño de estructuras de datos y simulaciones de gran escala. 
 
 **¿Cómo afectan los datos estáticos al tamaño de la instancia?** 
 
@@ -173,24 +270,371 @@ Los atributos estáticos no ocupan espacio dentro de cada objeto, porque no pert
 
 No. Solo existen una vez en memoria, independiente de cuántas instancias haya. 
 
-**Reflexión** 
+**Experimento 3: Inclusión de un método en la clase**
+
+**🔹 En qué consiste**
+
+En este experimento se modifica la clase Particle para incluir un método que realice una operación sencilla, como imprimir sus atributos o calcular algo básico. El objetivo es observar si al agregar métodos cambia el tamaño del objeto o la disposición de sus atributos en memoria.
+
+**🎯 Objetivo**
+
+Verificar si los métodos forman parte de la instancia de un objeto en C++ o si, por el contrario, solo existen en la sección de código del programa.
+
+**📖 Expectativa previa**
+
+Se espera que, al añadir un método dentro de la clase, el tamaño del objeto (sizeof) se mantenga igual (8 bytes en este caso) y que las direcciones de los atributos no cambien. Esto se debe a que el código de los métodos se almacena en la memoria de texto del programa y no se guarda dentro de cada instancia.
+
+**Vídeo evidencia**
+
+https://github.com/user-attachments/assets/7a0fc70a-9bf7-4564-b64f-a422b48f3e72
+
+**Análisis de resultados:** 
+
+El programa mostró que el tamaño de Particle sigue siendo de 8 bytes, el mismo que en experimentos anteriores. Las direcciones de memoria de x e y permanecen contiguas dentro de la instancia p1. La invocación del método imprime la posición, pero no altera la estructura del objeto en memoria.
+
+**Conclusión**
+
+Esto demuestra que en C++ los objetos contienen solo sus datos (atributos), mientras que los métodos se almacenan de manera separada en el código ejecutable. Así se refuerza la idea de que la clase es una plantilla que define tanto datos como comportamientos, pero solo los datos ocupan espacio en cada objeto creado.
+
+# Reflexión 
 
 **¿Qué es un objeto desde la perspectiva de la memoria?** 
 
-Un objeto es un bloque de memoria que contiene los atributos definidos en su clase. Cada instancia tiene su propia copia de esos atributos, organizada de manera contigua en la memoria. Los métodos no ocupan espacio en el objeto; el código de los métodos está almacenado de manera global en la sección de texto del programa. 
+Un objeto en C++ es una región de memoria que almacena únicamente los atributos definidos en su clase. Cada instancia tiene su propio espacio reservado para estos datos, mientras que los métodos no residen dentro del objeto, sino en la sección de código del programa. Desde la memoria, entonces, un objeto es un bloque de bytes que representa el estado de esa instancia.
 
 **¿Cómo influyen los atributos y métodos en el tamaño y estructura del objeto?**
 
-- Los atributos no estáticos determinan directamente el tamaño del objeto (sizeof).
-- Los atributos estáticos no aumentan el tamaño del objeto, porque existen de manera independiente en memoria.
-- Los atributos dinámicos solo añaden el espacio del puntero dentro del objeto. La memoria extra reservada con new se encuentra en el heap, no dentro de la instancia.
-- Los métodos no influyen en el tamaño de la instancia (salvo si son virtual, en cuyo caso se añade un puntero oculto a la vtable).
+Los atributos determinan directamente el tamaño y la disposición interna del objeto. Como se vio en los experimentos, los atributos x e y de tipo float ocupan 8 bytes en total y se almacenan de forma contigua. Al crear un arreglo de objetos, estos se ubican uno tras otro en memoria, respetando ese mismo tamaño fijo. En cambio, los métodos no aumentan el tamaño del objeto: al agregar una función como printPosition, el tamaño de la clase no cambió, lo que demuestra que los métodos solo aportan comportamiento, no almacenamiento adicional en cada instancia.
 
-**Conclusión** 
+**Conclusión: resumir los hallazgos y cómo esto impacta el diseño de clases.** 
 
-El tamaño y estructura de un objeto en memoria dependen exclusivamente de sus miembros de instancia. Esto significa que, al diseñar clases, es importante distinguir entre:
+Los experimentos demuestran que:
 
-- Lo que pertenece a cada objeto (atributos normales → ocupan memoria en cada instancia).
-- Lo que pertenece a la clase completa (atributos estáticos → una sola copia compartida).
-- Lo que se gestiona dinámicamente (punteros → tamaño fijo en el objeto, pero memoria extra en el heap).
-Este entendimiento es clave para optimizar el uso de memoria y evitar errores de gestión, especialmente en programas que manejan muchos objetos o estructuras complejas.
+- Los objetos son bloques de memoria que almacenan únicamente los datos (atributos).
+- Los métodos no alteran el tamaño del objeto, ya que se almacenan por separado en el programa.
+- La organización contigua de los atributos en arreglos permite comprender cómo los compiladores optimizan el uso de memoria.
+
+Este entendimiento impacta el diseño de clases porque obliga a ser consciente de la cantidad y el tipo de atributos que se definen: cada atributo implica memoria en cada objeto. Los métodos, en cambio, pueden ser diseñados libremente sin preocupación de aumentar el tamaño de las instancias.
+
+# Sesión 2
+
+**Parte 1: Análisis de la estructura de una clase**
+
+**¿Dónde se almacenan los datos y métodos de una clase en C++ en la memoria?**
+
+- Los atributos (datos) de una clase se almacenan dentro de cada objeto creado.
+
+  - Si el objeto se crea como variable local, vive en la pila (stack).
+  - Si se crea con new, vive en el heap.
+
+- Los métodos no se copian dentro de cada objeto. En realidad, el código de los métodos está en la sección de código (text segment) del programa. Todos los objetos comparten esas instrucciones.
+
+**Explica el concepto de vtable y cómo se relaciona con los métodos virtuales.**
+
+- La vtable (virtual table) es una tabla de punteros generada por el compilador cuando una clase declara al menos un método virtual.
+
+  - Cada clase con métodos virtuales tiene una única vtable.
+  - Cada objeto de esa clase guarda un puntero oculto a su vtable.
+  - Al invocar un método virtual, el programa consulta la vtable del objeto en tiempo de ejecución para determinar qué versión del     método debe llamar (base o derivada).
+
+**🧪 Experimento 4 — Análisis de la estructura de una clase**
+
+**Objetivo:**
+
+Observar cómo los atributos y métodos de una clase se organizan en la memoria, y comprobar que los métodos no afectan al tamaño del objeto (porque residen en la sección de código del programa).
+
+**Código a ejecutar:**
+
+```
+#include <iostream>
+using namespace std;
+
+class Simple {
+public:
+    int a;
+};
+
+class Complex {
+public:
+    int a, b, c;
+    void method1() {}
+    void method2() {}
+};
+
+int main() {
+    cout << "Tamaño de Simple: " << sizeof(Simple) << " bytes" << endl;
+    cout << "Tamaño de Complex: " << sizeof(Complex) << " bytes" << endl;
+    return 0;
+}
+```
+**Qué esperamos:**
+
+- Simple solo tiene un int, así que su tamaño debería ser igual al tamaño de un entero (usualmente 4 bytes).
+- Complex tiene tres ints, por lo que su tamaño debería rondar 12 bytes (o quizás 16 si hay padding/alineación de memoria).
+- Los métodos no cambian el tamaño de los objetos, porque el código está almacenado en la sección de texto del programa, no dentro de cada objeto. 
+
+**Evidencia Experimento**
+
+https://github.com/user-attachments/assets/4c88b317-51d9-43c9-9737-4d2db2dc82ef
+
+**Análisis y reflexión:**
+
+- Simple contiene un único atributo de tipo int, por lo que su tamaño corresponde al de un entero en este entorno (4 bytes).
+- Complex contiene tres enteros, lo que da un total de 12 bytes.
+- Los métodos method1 y method2 no aumentaron el tamaño del objeto, ya que el código de los métodos se almacena en la sección de texto (código) del programa y se comparte entre todas las instancias.
+- Esto confirma que el tamaño de un objeto depende únicamente de sus atributos, no de la cantidad de métodos que tenga. 
+
+**Conclusión:**
+
+En C++, los atributos de una clase determinan el tamaño en memoria de sus instancias, mientras que los métodos no influyen en el tamaño porque su código se almacena fuera de los objetos. Este hallazgo es clave para el diseño de clases eficientes: agregar más funciones no penaliza en memoria, pero agregar más atributos sí lo hace. 
+
+**Parte 2: Exploración de métodos virtuales** 
+
+**¿Cómo afecta la presencia de métodos virtuales al tamaño del objeto?** 
+
+La presencia de métodos virtuales añade al objeto un puntero oculto a la vtable, lo que incrementa el tamaño de cada instancia (típicamente 4 bytes en sistemas de 32 bits, 8 bytes en sistemas de 64 bits). 
+
+**¿Qué papel juegan las vtables en el polimorfismo?** 
+
+Las vtables permiten que, incluso si una variable es declarada como tipo Base pero apunta a un Derived, se invoque correctamente la implementación de Derived. Esto es lo que hace posible el polimorfismo dinámico.
+
+**¿Cómo se implementan los métodos virtuales en C++? Explica el concepto de vtable y cómo se utiliza para resolver llamadas a métodos virtuales.**
+
+**R/** En C++, los métodos virtuales se implementan usando una estructura oculta llamada vtable (virtual table o tabla de funciones virtuales).
+
+**¿Qué es la vtable?** 
+
+- La vtable es una tabla creada por el compilador para cada clase que tenga al menos un método virtual.
+- Contiene un conjunto de punteros a funciones que representan las implementaciones de los métodos virtuales de esa clase.
+- Cada clase con métodos virtuales tiene su propia vtable. 
+
+**¿Cómo acceden los objetos a la vtable?** 
+
+- Cada objeto de una clase con métodos virtuales guarda un puntero oculto a la vtable (generalmente el primer campo del objeto).
+- Este puntero es insertado automáticamente por el compilador y apunta a la vtable correspondiente al tipo real del objeto.
+- Por eso, aunque una variable esté declarada como tipo Base, si realmente guarda un Derived, su puntero oculto a la vtable apunta a la tabla de Derived.
+
+3. Resolviendo llamadas virtuales (despacho dinámico)
+
+Cuando se llama a un método virtual:
+
+1. El compilador no inserta una llamada directa.
+2. En su lugar, sigue el puntero oculto a la vtable del objeto.
+3. Busca en la posición correspondiente de la tabla el puntero a la función.
+4. Ejecuta la función encontrada (que puede ser la de la clase base o una redefinida en la derivada).
+
+De esta manera, el método invocado depende del tipo dinámico del objeto, no de su tipo estático (el declarado).
+
+**Ejemplo Ilustrativo**
+
+```
+#include <iostream>
+using namespace std;
+
+class Base {
+public:
+    virtual void display() {
+        cout << "Base display" << endl;
+    }
+};
+
+class Derived : public Base {
+public:
+    void display() override {
+        cout << "Derived display" << endl;
+    }
+};
+
+int main() {
+    Base* b1 = new Base();
+    Base* b2 = new Derived();
+
+    b1->display(); // Usa la vtable de Base → imprime "Base display"
+    b2->display(); // Usa la vtable de Derived → imprime "Derived display"
+
+    delete b1;
+    delete b2;
+}
+```
+**Explicación interna:**
+
+- b1 apunta a un objeto Base, cuyo puntero oculto a vtable referencia la vtable de Base.
+- b2 apunta a un objeto Derived, cuyo puntero oculto a vtable referencia la vtable de Derived.
+- En cada llamada a display(), el compilador busca la función en la posición correspondiente de la vtable activa. 
+
+5. Impacto en memoria y rendimiento
+
+- Memoria: cada objeto con métodos virtuales ocupa más espacio, porque necesita guardar un puntero adicional a la vtable.
+- Rendimiento: las llamadas virtuales son ligeramente más lentas que las normales, porque requieren una indirección extra (buscar en la tabla antes de llamar).
+- Flexibilidad: esta pequeña penalización se compensa con la capacidad de soportar polimorfismo dinámico, fundamental en OOP. 
+
+Los métodos virtuales en C++ se implementan con vtables. Cada objeto guarda un puntero oculto a la vtable de su clase. Cuando se invoca un método virtual, el programa consulta la vtable para determinar qué función ejecutar, permitiendo que objetos derivados redefinan el comportamiento de los métodos heredados.
+
+
+**🧪 Experimento 5: Métodos virtuales y vtables**
+
+**Objetivo:** 
+
+Analizar cómo la introducción de métodos virtuales en las clases afecta el tamaño de los objetos y observar la generación de tablas virtuales (vtables).
+
+**Código Utilizado:**
+
+```
+#include <iostream>
+using namespace std;
+
+class Base {
+public:
+    virtual void display() {
+        cout << "Base display" << endl;
+    }
+};
+
+class Derived : public Base {
+public:
+    void display() override {
+        cout << "Derived display" << endl;
+    }
+};
+
+int main() {
+    cout << "Tamaño de Base: " << sizeof(Base) << " bytes" << endl;
+    cout << "Tamaño de Derived: " << sizeof(Derived) << " bytes" << endl;
+
+    Base b;
+    Derived d;
+
+    // Direcciones de las vtables
+    cout << "Vtable de Base: " << *(void**)&b << endl;
+    cout << "Vtable de Derived: " << *(void**)&d << endl;
+
+    // Prueba de polimorfismo
+    Base* ptr = &d;
+    ptr->display();
+
+    return 0;
+}
+```
+
+**Evidencia Experimento:**
+
+https://github.com/user-attachments/assets/b9ad029f-c5f3-4791-860c-854806f9a43a
+
+**Resultados obtenidos:**
+
+```
+Tamaño de Base: 8 bytes
+Tamaño de Derived: 8 bytes
+Vtable de Base: 00007FF68F7EBCF8
+Vtable de Derived: 00007FF68F7EBD20
+Base display
+Derived display
+```
+
+**Análisis y reflexión:**
+
+- Tanto Base como Derived tienen un tamaño de 8 bytes, lo cual corresponde al puntero oculto a la vtable (en arquitecturas de 64 bits, un puntero = 8 bytes).
+- Las direcciones de las vtables son distintas (Base y Derived), lo que confirma que cada clase con métodos virtuales tiene su propia tabla virtual.
+- La llamada a ptr->display(); demuestra el polimorfismo dinámico: aunque el puntero es de tipo Base*, la ejecución corresponde al método redefinido en Derived.
+- La presencia de métodos virtuales no aumenta el tamaño de los objetos con respecto a otros que también tengan vtables: basta un puntero a la tabla para acceder a las funciones virtuales.
+
+**Conclusión:** 
+
+El uso de métodos virtuales en C++ introduce un puntero oculto a la vtable, lo que explica que el tamaño mínimo de un objeto con virtual functions sea el de un puntero (8 bytes en sistemas de 64 bits). Las vtables permiten la implementación de polimorfismo dinámico, ya que cada clase mantiene su propia tabla con las direcciones de sus métodos virtuales.
+
+**Parte 3: Uso de punteros y referencias**
+
+- **¿Cuál es la relación entre los punteros a métodos y la vtable?**
+
+**
+
+R/** Los punteros a funciones no dependen de la vtable. Solo almacenan una dirección de función estática o global dentro del objeto.
+En cambio, los métodos virtuales sí se resuelven mediante la vtable, que almacena direcciones de funciones virtuales para permitir polimorfismo dinámico.
+
+- **¿Cómo afectan estos mecanismos al rendimiento del programa?**
+
+**R/** - Punteros a funciones: la llamada es casi tan rápida como una llamada directa porque solo implica saltar a la dirección guardada en el puntero.
+- Métodos virtuales (vtable): añaden una indirección extra (buscar en la tabla la función correspondiente), lo que introduce un pequeño costo adicional en tiempo de ejecución, aunque permite flexibilidad y polimorfismo.
+
+- **¿Qué diferencia hay entre punteros a funciones y punteros a métodos miembro en C++? ¿Cómo afectan al tamaño de los objetos y al rendimiento?**
+
+**R/** - Punteros a funciones: almacenan solo la dirección de una función global o estática. Su tamaño suele ser igual al de un puntero (4 u 8 bytes, según la arquitectura). El impacto en el tamaño del objeto es mínimo.
+
+- Punteros a métodos miembro: son más complejos porque deben incluir información extra (como cómo acceder al this) para invocar funciones ligadas a una instancia. Por esto, suelen ser más grandes que los punteros a funciones y ligeramente más lentos. 
+
+🧪 Experimento 6: Uso de punteros a funciones en clases
+
+Objetivo:
+Explorar cómo los punteros a funciones se integran en una clase, analizar su impacto en el tamaño de la instancia y compararlos con los métodos virtuales en cuanto a memoria y rendimiento.
+
+Código utilizado:
+
+```
+#include <iostream>
+using namespace std;
+
+class FunctionPointerExample {
+public:
+    void (*funcPtr)();  // Puntero a función estática o libre
+
+    static void staticFunction() {
+        cout << "Static function called" << endl;
+    }
+
+    void assignFunction() {
+        funcPtr = staticFunction;
+    }
+
+    void callFunction() {
+        if (funcPtr) {
+            funcPtr();
+        }
+    }
+};
+
+int main() {
+    FunctionPointerExample obj;
+
+    cout << "Tamaño de FunctionPointerExample: "
+         << sizeof(FunctionPointerExample) << " bytes" << endl;
+
+    obj.assignFunction();
+    obj.callFunction();
+
+    return 0;
+}
+```
+**Expectativa del experimento:** 
+
+En este experimento se esperaba comprobar que al incluir un puntero a función dentro de una clase, el tamaño de la instancia estaría determinado únicamente por el espacio necesario para almacenar dicho puntero (generalmente 4 bytes en sistemas de 32 bits o 8 bytes en sistemas de 64 bits). Además, se anticipaba que la función estática no incrementaría el tamaño de cada objeto, ya que reside en la sección de código del programa. Con esto se buscaba entender la diferencia entre almacenar datos dentro de un objeto y simplemente guardar referencias (punteros) hacia funciones ya definidas, lo que permite analizar cómo los punteros influyen en la eficiencia y en la forma en que se llaman los métodos.
+
+**Evidencia Experimento**
+
+https://github.com/user-attachments/assets/239e325a-d6eb-41b1-ad53-65056be9af1c
+
+**Resultado obtenido:**
+
+```
+Tamaño de FunctionPointerExample: 8 bytes
+Static function called
+```
+
+**Analisis**
+
+- El tamaño de la clase corresponde únicamente al espacio necesario para almacenar el puntero a función (8 bytes en un sistema de 64 bits).
+- La función estática no ocupa espacio en cada objeto, ya que reside en la sección de código del programa. Lo único que se guarda en la instancia es el puntero que referencia a esa función.
+- La llamada a través de un puntero de función es directa (salto a la dirección contenida en el puntero), sin pasar por una vtable, lo que la hace eficiente.
+
+**Reflexión Individual**
+
+**¿Dónde residen los datos y métodos de una clase en la memoria?**
+
+los datos (funcPtr) están en el heap o stack dependiendo de dónde se instancie el objeto; los métodos (staticFunction) están en la sección de código del programa.
+
+**¿Cómo interactúan las diferentes partes en tiempo de ejecución?**
+
+el objeto mantiene el puntero y, al llamar callFunction, salta a la dirección almacenada en funcPtr. No hay necesidad de buscar en la vtable.
+
+**Conclusión: cómo esta comprensión afecta el diseño de sistemas.**
+
+Comprender cómo funcionan los punteros a funciones frente a métodos virtuales permite decidir cuándo usar cada uno. Los punteros a funciones son útiles para callbacks simples y reducen overhead, mientras que los métodos virtuales son preferibles cuando se necesita polimorfismo y extensibilidad.

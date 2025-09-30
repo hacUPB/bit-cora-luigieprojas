@@ -638,3 +638,203 @@ el objeto mantiene el puntero y, al llamar callFunction, salta a la dirección a
 **Conclusión: cómo esta comprensión afecta el diseño de sistemas.**
 
 Comprender cómo funcionan los punteros a funciones frente a métodos virtuales permite decidir cuándo usar cada uno. Los punteros a funciones son útiles para callbacks simples y reducen overhead, mientras que los métodos virtuales son preferibles cuando se necesita polimorfismo y extensibilidad.
+
+## Sesión 3 Unidad 5 Sistemas Computacionales
+
+**¿Cómo implementa el compilador el encapsulamiento en C++? Si los miembros privados aún ocupan espacio en el objeto, ¿Qué impide que se acceda a ellos desde fuera de la clase?**
+
+El compilador en C++ implementa el encapsulamiento a través de las reglas de acceso (public, protected, private). Cuando declaramos miembros privados, estos siguen ocupando espacio dentro del objeto, es decir, físicamente están en la memoria del objeto igual que los miembros públicos. Lo que cambia es que el compilador restringe el acceso directo: si intentamos acceder desde fuera de la clase a una variable privada, el compilador lanza un error de acceso antes de siquiera generar el binario. 
+
+En otras palabras, el impedimento no es físico, sino lógico: el compilador coloca una “barrera” en tiempo de compilación que evita que el programador use directamente esos datos desde el exterior. Sin embargo, al inspeccionar la memoria (como lo hice en la captura que añadí a la bitácora), puede verse que los miembros privados están almacenados dentro del mismo bloque de memoria que forma parte del objeto. 
+
+Esto demuestra que el encapsulamiento es una abstracción que protege la integridad del diseño y evita que se rompan las reglas de uso establecidas por la clase, aunque en el nivel más bajo la memoria esté igualmente reservada. 
+
+1. ¿Qué es el encapsulamiento y cuál es su propósito en la programación orientada a objetos? 
+
+ El encapsulamiento es el principio de ocultar los detalles internos de una clase y exponer solo lo necesario a través de una interfaz pública. Su propósito es proteger los datos, garantizar la modularidad y evitar que el estado interno de un objeto sea manipulado de forma incorrecta desde fuera de la clase. 
+ 
+2. ¿Por qué es importante proteger los datos de una clase y restringir el acceso desde fuera de la misma? 
+
+ Porque ayuda a mantener la integridad del objeto: previene cambios indebidos, evita errores difíciles de depurar y asegura que las reglas de negocio se cumplan únicamente a través de los métodos definidos. 
+ 
+3. ¿Qué significa reinterpret_cast y cómo afecta la seguridad del programa? 
+
+ reinterpret_cast es un tipo de conversión en C++ que permite tratar una dirección de memoria como si fuese de otro tipo arbitrario. Aunque puede ser útil en casos de bajo nivel, rompe las garantías de seguridad del lenguaje, ya que el compilador no puede verificar si el acceso es válido o seguro. 
+ 
+4. ¿Por qué crees que se pudo acceder a los miembros privados de MyClass en este experimento, a pesar de que el compilador normalmente lo impediría? 
+
+ Porque las restricciones de acceso (private, protected, public) son solo reglas aplicadas en tiempo de compilación. Una vez generado el programa, todos los miembros ocupan posiciones de memoria contiguas dentro del objeto. Al manipular directamente las direcciones de memoria con punteros, se ignoran esas reglas. 
+ 
+5. ¿Cuáles podrían ser las consecuencias de utilizar técnicas como las mostradas en este experimento en un programa real? 
+
+ Podrían corromper datos internos, causar comportamientos indefinidos, vulnerabilidades de seguridad (por ejemplo, exploits), y romper la mantenibilidad del código al depender de supuestos específicos sobre la disposición en memoria de los objetos. 
+ 
+6. ¿Qué implicaciones tiene este experimento sobre la confianza en las barreras de encapsulamiento que proporciona C++? 
+
+ Muestra que el encapsulamiento en C++ no es una barrera absoluta en tiempo de ejecución, sino una convención reforzada por el compilador. En términos prácticos, es suficiente para desarrollo seguro, pero un programador malicioso o con acceso bajo nivel puede romperlo. Por eso, la seguridad real depende de buenas prácticas y no únicamente del compilador. 
+
+Una vez comprendido cómo el encapsulamiento opera a nivel de compilador, procedemos a investigar otro pilar de la POO: la herencia. Mientras el encapsulamiento se enfoca en ocultar datos, la herencia establece relaciones entre clases que impactan directamente en la organización de la memoria. 
+
+# Herencia y la Relación en Memoria 
+
+**Pregunta: ¿Cómo se organiza en memoria un objeto de una clase derivada en C++? ¿Cómo se almacenan los atributos de la clase base y de la derivada?** 
+
+**Respuesta:** 
+
+ En C++, los atributos de la clase base se almacenan primero en la memoria del objeto derivado, seguidos de los atributos propios de la clase derivada. Esto significa que el layout de memoria es contiguo: los datos de la base ocupan el primer bloque de memoria y los datos de la derivada se ubican después. 
+
+   - Si se añaden más niveles de herencia, cada clase base aporta su bloque de atributos en orden jerárquico, de arriba hacia abajo en la cadena de herencia.
+
+
+  - Este orden facilita que un puntero o referencia a la clase base pueda “apuntar” al inicio del objeto derivado sin necesidad de reacomodar la memoria.
+
+**Pregunta: ¿Cómo funciona el polimorfismo en C++ a nivel interno? Explica cómo se utilizan las vtables para resolver métodos virtuales en una jerarquía de herencia.** 
+
+**Respuesta:**
+ Cuando una clase declara al menos un método virtual, el compilador genera una tabla de métodos virtuales (vtable). Esta tabla contiene punteros a las implementaciones de los métodos virtuales disponibles para esa clase. 
+
+  - Cada objeto de esa clase (o derivada) incluye un puntero oculto llamado vptr que apunta a la vtable correspondiente.
+
+  - En tiempo de ejecución, cuando se invoca un método virtual a través de un puntero o referencia a la clase base, el programa consulta el vptr del objeto real, busca la dirección del método en la vtable y salta a la implementación correcta (por ejemplo, Dog::makeSound o Cat::makeSound). 
+
+Impacto en rendimiento: 
+
+  - La llamada a un método virtual cuesta un paso adicional de indirección (consulta en la tabla) en comparación con una llamada estática.
+
+- Sin embargo, el impacto en la práctica suele ser mínimo y se considera un costo aceptable para habilitar el polimorfismo dinámico. 
+
+**Reflexión Individual** 
+
+**1. ¿Cómo se implementan internamente el encapsulamiento, la herencia y el polimorfismo?**
+
+- El encapsulamiento se implementa mediante reglas del compilador que restringen el acceso, aunque los miembros privados siguen existiendo físicamente en la memoria del objeto.
+
+- La herencia se implementa extendiendo el layout de memoria: primero los datos de la base, luego los de la derivada, manteniendo compatibilidad con punteros a la base. 
+
+- El polimorfismo se implementa con vtables y punteros vptr ocultos en los objetos, lo que permite resolver llamadas dinámicas en tiempo de ejecución. 
+
+2. Ventajas: 
+
+- Encapsulamiento: protege la integridad de los objetos y mejora la mantenibilidad.
+- Herencia: permite la reutilización de código y la extensión de clases sin duplicación.
+- Polimorfismo: habilita interfaces genéricas y código flexible que funciona con múltiples tipos derivados. 
+
+3. Desventajas: 
+
+  - Encapsulamiento puede romperse con técnicas de bajo nivel (no es seguridad absoluta).
+  - Herencia puede aumentar el acoplamiento entre clases y volver más complejo el diseño.
+  - Polimorfismo introduce un pequeño costo en tiempo de ejecución y mayor complejidad en la disposición interna (vptr, vtables).
+  
+Para validar empíricamente los conceptos teóricos analizados, realizaremos tres experimentos que demuestran la implementación interna del encapsulamiento, herencia y polimorfismo en C++. 
+
+## Experimentos Sesión 3
+
+**Experimento 1: Violación del Encapsulamiento**
+
+**¿Cómo implementa el compilador el encapsulamiento en C++? Si los miembros privados aún ocupan espacio en el objeto, ¿Qué impide que se acceda a ellos desde fuera de la clase?**
+
+Este experimento consiste en demostrar que el encapsulamiento en C++ es una barrera a nivel de compilador, no una restricción física en memoria. Utilizando reinterpret_cast y aritmética de punteros, accederé directamente a los miembros privados de una clase desde fuera de ella, evitando las restricciones del compilador. Espero demostrar que aunque el compilador normalmente genera errores al intentar acceder a miembros privados, a nivel de memoria estos datos están igualmente accesibles y pueden ser leídos y modificados mediante operaciones de bajo nivel, revelando que la protección del encapsulamiento es lógica más que física. 
+
+**Código Utilizado:** 
+
+```
+#include <iostream>
+using namespace std;
+
+class Cajasecreta {
+private:
+    int secreto1;
+    float secreto2;
+    char secreto3;
+
+public:
+    MyClass(int s1, float s2, char s3) : secret1(s1), secret2(s2), secret3(s3) {}
+
+    void printMembers() const {
+        cout << "=== Acceso LEGÍTIMO ===" << endl;
+        cout << "secret1: " << secret1 << endl;
+        cout << "secret2: " << secret2 << endl;
+        cout << "secret3: " << secret3 << endl;
+        cout << "======================" << endl;
+    }
+};
+
+int main() {
+    MyClass obj(42, 3.14f, 'A');
+    
+    // 1. Mostrar acceso legítimo
+    obj.printMembers();
+    
+    // 2. Intentar acceso directo (debe fallar en compilación)
+    // cout << obj.secret1 << endl; // DESCOMENTAR PARA VER ERROR
+    
+    // 3. "Hackear" el encapsulamiento
+    cout << "=== Acceso ILEGÍTIMO (hackeando) ===" << endl;
+    
+    // Usando reinterpret_cast para acceder a memoria
+    int* ptrInt = reinterpret_cast<int*>(&obj);
+    cout << "secret1 robado: " << *ptrInt << endl;
+    
+    // Para float, necesitamos avanzar el puntero
+    // En la mayoría de sistemas: int = 4 bytes, float = 4 bytes
+    float* ptrFloat = reinterpret_cast<float*>(ptrInt + 1);
+    cout << "secret2 robado: " << *ptrFloat << endl;
+    
+    // Para char, avanzamos más
+    char* ptrChar = reinterpret_cast<char*>(ptrFloat + 1);
+    cout << "secret3 robado: " << *ptrChar << endl;
+    
+    // 4. Modificar valores privados
+    cout << "\n=== Modificando valores privados ===" << endl;
+    *ptrInt = 100;
+    *ptrFloat = 99.99f;
+    *ptrChar = 'Z';
+    
+    // Verificar cambios
+    obj.printMembers();
+    
+    return 0;
+} 
+
+```
+**Resultado obtenido de la consola: 
+
+=== ACCESO LEGITIMO ===
+secreto1: 42
+secreto2: 3.14
+secreto3: X
+======================**
+
+Ahora agregamos reemplazamos esto a int main()
+
+```
+int main() {
+    CajaSecreta caja(42, 3.14f, 'X');
+    
+    // 1. Acceso normal (legal)
+    caja.mostrarSecretos();
+    
+    // 2. Intentar acceso directo (debe fallar) - NUEVAS LÍNEAS
+    cout << "Intentando acceso directo a secreto1..." << endl;
+    cout << caja.secreto1 << endl; // ESTA LÍNEA DEBE DAR ERROR
+    
+    return 0;
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

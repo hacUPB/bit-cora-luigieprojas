@@ -467,4 +467,353 @@ R/ La estructura FIFO define que el primero en llegar es el primero en salir, y 
 
 5. ¿Puedo implementar y depurar una queue para tipos de datos más complejos, asegurándome de que no haya fugas de memoria ni errores de puntero?
 
-R/ Sí puedo implementar y depurar una queue para datos más complejos, siempre que tenga cuidado con la memoria. En esos casos no solo debo liberar el nodo, sino también lo que guarde dentro (si es dinámico). La depuración con casos pequeños (cola vacía, un solo nodo, muchos nodos) es fundamental para comprobar que no haya fugas ni errores de punteros.
+R/ Sí puedo implementar y depurar una queue para datos más complejos, siempre que tenga cuidado con la memoria. En esos casos no solo debo liberar el nodo, sino también lo que guarde dentro (si es dinámico). La depuración con casos pequeños (cola vacía, un solo nodo, muchos nodos) es fundamental para comprobar que no haya fugas ni errores de punteros. 
+
+## Reto 
+
+**Código Completo:**
+
+**main.cpp:**
+
+```
+#include "ofMain.h"
+#include "ofApp.h"
+
+//========================================================================
+int main() {
+    ofSetupOpenGL(800, 600, OF_WINDOW);
+    ofRunApp(new ofApp());
+}
+```
+
+**ofApp.cpp:** 
+
+```
+#include "ofApp.h"
+
+//--------------------------------------------------------------
+void ofApp::setup() {
+    ofSetWindowTitle("Snake de Letras");
+    snake.setup('A'); // letra inicial
+}
+
+//--------------------------------------------------------------
+void ofApp::update() {
+    snake.update(ofGetMouseX(), ofGetMouseY());
+}
+
+//--------------------------------------------------------------
+void ofApp::draw() {
+    // ?? el fondo ahora se pinta aquí, no en snake.draw()
+    ofBackground(snake.bgColor);
+
+    snake.draw();
+
+    // Menú visible siempre
+    ofSetColor(255);
+    ofDrawBitmapStringHighlight(
+        "+ Agregar letra (luego escribe una)\n"
+        "- Borrar cabeza o letra seleccionada\n"
+        "1-9 Seleccionar posición\n"
+        "0 Cambiar color de la snake\n"
+        "Shift Cambiar fondo\n"
+        "Esc Atrás",
+        20, 20
+    );
+}
+
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key) {
+    if (waitingForAdd) {
+        if (key == OF_KEY_ESC) {
+            waitingForAdd = false;
+        }
+        else if (isalpha(key)) {
+            snake.addLetter((char)toupper(key));
+            waitingForAdd = false;
+        }
+        else {
+            ofSystemAlertDialog("Tecla inválida. Usa solo letras.");
+        }
+        return;
+    }
+
+    if (key == '+') {
+        waitingForAdd = true;
+    }
+    else if (key == '-') {
+        if (selectedIndex >= 0) {
+            snake.removeAt(selectedIndex);
+            selectedIndex = -1;
+        }
+        else {
+            snake.removeHead();
+        }
+    }
+    else if (key >= '1' && key <= '9') {
+        selectedIndex = key - '1';
+        if (selectedIndex >= snake.bodyChars.size()) {
+            selectedIndex = -1;
+        }
+    }
+    else if (key == '0') {
+        snake.changeColor();
+    }
+    else if (key == OF_KEY_SHIFT) {
+        snake.changeBackground();
+    }
+    else if (selectedIndex >= 0 && isalpha(key)) {
+        snake.replaceLetter(selectedIndex, (char)toupper(key));
+        selectedIndex = -1;
+    }
+}
+```
+
+**ofApp.h:** 
+
+```
+#pragma once
+#include "ofMain.h"
+#include "snake.h"
+
+class ofApp : public ofBaseApp {
+public:
+    void setup();
+    void update();
+    void draw();
+
+    void keyPressed(int key);
+
+    Snake snake;
+    bool waitingForAdd = false;
+    int selectedIndex = -1;
+};
+``` 
+
+**snake.cpp:** 
+
+```
+#include "snake.h"
+#include <cmath>
+
+Snake::Snake() {
+}
+
+Snake::~Snake() {
+    clear();
+}
+
+void Snake::setup(char initialChar) {
+    bodyChars.clear();
+    bodyPos.clear();
+
+    char c = (char)toupper(initialChar);
+    // crear 5 letras iniciales centradas
+    for (int i = 0; i < 5; i++) {
+        bodyChars.push_back(c);
+        bodyPos.push_back(ofVec2f(ofGetWidth() / 2 - i * 30, ofGetHeight() / 2));
+    }
+
+    bodyColor = ofColor::fromHsb(ofRandom(255), 200, 255);
+    bgColor = ofColor::fromHsb(ofRandom(255), 120, 255);
+
+    // carga fuente (coloca verdana.ttf en bin/data/)
+    font.load("verdana.ttf", 36, true, true, true);
+}
+
+void Snake::update(float targetX, float targetY) {
+    if (bodyPos.empty()) return;
+
+    // cabeza va al target
+    float prevX = bodyPos[0].x;
+    float prevY = bodyPos[0].y;
+    bodyPos[0].x = targetX;
+    bodyPos[0].y = targetY;
+
+    // separación mínima entre letras
+    const float minDist = 25.0f;
+
+    for (size_t i = 1; i < bodyPos.size(); ++i) {
+        float dx = prevX - bodyPos[i].x;
+        float dy = prevY - bodyPos[i].y;
+        float dist = sqrtf(dx * dx + dy * dy);
+        if (dist > minDist) {
+            float ratio = minDist / dist;
+            bodyPos[i].x = prevX - dx * ratio;
+            bodyPos[i].y = prevY - dy * ratio;
+        }
+        prevX = bodyPos[i].x;
+        prevY = bodyPos[i].y;
+    }
+}
+
+void Snake::draw() {
+    // dibuja fondo y letras con delineado negro
+    ofBackground(bgColor);
+
+    for (size_t i = 0; i < bodyChars.size(); ++i) {
+        std::string s(1, bodyChars[i]);
+        float x = bodyPos[i].x;
+        float y = bodyPos[i].y;
+
+        // delineado negro (4 offsets)
+        ofSetColor(0);
+        font.drawString(s, x - 2, y - 2);
+        font.drawString(s, x + 2, y - 2);
+        font.drawString(s, x - 2, y + 2);
+        font.drawString(s, x + 2, y + 2);
+
+        // letra principal
+        ofSetColor(bodyColor);
+        font.drawString(s, x, y);
+    }
+}
+
+void Snake::addLetter(char c) {
+    if (!isalpha((unsigned char)c)) return;
+    if ((int)bodyChars.size() >= maxLength) return;
+
+    char uc = (char)toupper((unsigned char)c);
+    // insertar en cabeza
+    if (!bodyChars.empty()) {
+        bodyChars.insert(bodyChars.begin(), uc);
+        bodyPos.insert(bodyPos.begin(), bodyPos.front());
+    }
+    else {
+        bodyChars.push_back(uc);
+        bodyPos.push_back(ofVec2f(ofGetMouseX(), ofGetMouseY()));
+    }
+}
+
+void Snake::removeHead() {
+    if ((int)bodyChars.size() <= minLength) return;
+    if (!bodyChars.empty()) {
+        bodyChars.erase(bodyChars.begin());
+        bodyPos.erase(bodyPos.begin());
+    }
+}
+
+void Snake::replaceLetter(int index, char c) {
+    if (index < 0 || index >= (int)bodyChars.size()) return;
+    if (!isalpha((unsigned char)c)) return;
+    bodyChars[index] = (char)toupper((unsigned char)c);
+}
+
+void Snake::removeAt(int index) {
+    if (index < 0 || index >= (int)bodyChars.size()) return;
+    if ((int)bodyChars.size() <= minLength) return;
+    bodyChars.erase(bodyChars.begin() + index);
+    bodyPos.erase(bodyPos.begin() + index);
+}
+
+void Snake::changeColor() {
+    bodyColor = ofColor::fromHsb(ofRandom(255), 200, 255);
+}
+
+void Snake::changeBackground() {
+    bgColor = ofColor::fromHsb(ofRandom(255), 120, 255);
+}
+
+void Snake::clear() {
+    bodyChars.clear();
+    bodyPos.clear();
+}
+```
+
+**snake.h:** 
+
+```
+#pragma once
+#include "ofMain.h"
+#include <vector>
+
+class Snake {
+public:
+    Snake();
+    ~Snake();
+
+    // inicializa con una letra (usa en setup de ofApp)
+    void setup(char initialChar);
+
+    // movimiento: cabeza sigue a (targetX,targetY)
+    void update(float targetX, float targetY);
+
+    // dibuja (usa font y colores)
+    void draw();
+
+    // operaciones requeridas por ofApp.cpp
+    void addLetter(char c);            // agrega letra en la cabeza
+    void removeHead();
+    void replaceLetter(int index, char c);
+    void removeAt(int index);
+
+    void changeColor();
+    void changeBackground();
+
+    void clear();
+
+    // datos públicos que ofApp.cpp puede leer (bodyChars se usaba en tu código)
+    std::vector<char> bodyChars;
+    std::vector<ofVec2f> bodyPos;
+    ofColor bodyColor;
+    ofColor bgColor;
+    ofTrueTypeFont font;
+
+    const int maxLength = 9;
+    const int minLength = 3;
+
+    int size() const { return (int)bodyChars.size(); }
+
+    // alias para evitar errores por nombres distorsionados
+    void addChar(char c) { addLetter(c); }
+    void replaceAt(int i, char c) { replaceLetter(i, c); }
+    void changeBgColor() { changeBackground(); }
+};
+```
+
+Pregunta: ¿Qué tipo de efecto visual quieres lograr? ¿Cómo pueden ayudarte las diferentes estructuras de datos a lograr ese efecto? 
+
+R/ El efecto visual que elegí es un snake de letras que sigue el mouse, con interacción para agregar, eliminar o cambiar letras y colores.
+- Arreglo/Vector: std::vector<char> y std::vector<ofVec2f> almacenan las letras y posiciones de cada elemento de la snake, permitiendo acceso rápido a cualquier índice y control del tamaño dinámico.
+- Pila/Cola implícita: se puede considerar la inserción de letras en la cabeza como una pila (LIFO) y la eliminación de la cabeza como desapilar, para manejar dinámicamente el crecimiento y acortamiento de la snake.
+Esto permite controlar el flujo de datos y reproducir efectos dinámicos de manera ordenada. 
+
+Pregunta: ¿Qué consideraciones debes tener en cuenta al gestionar dinámicamente la memoria de los objetos? ¿Cómo asegurar que no haya fugas de memoria? 
+
+R/ - En este proyecto utilicé objetos automáticos (stack) en la mayoría de los casos, pero si hubiera usado new para crear letras u objetos, tendría que haber liberado la memoria con delete.
+- La clase Snake tiene un método clear() que borra los vectores y libera los datos asociados, previniendo fugas.
+- Hay que considerar limpiar siempre cualquier estructura dinámica al finalizar el programa o al reiniciar elementos (bodyChars.clear(), bodyPos.clear()).
+
+Pregunta: ¿Cómo puedes hacer que la interacción del usuario influya en múltiples estructuras de datos simultáneamente para crear un efecto visual coherente y dinámico? 
+
+R/ Al presionar +, se agrega una letra en la cabeza (bodyChars.insert) y se copia su posición inicial (bodyPos.insert). Esto actualiza dos vectores simultáneamente, manteniendo la coherencia visual.
+- Al eliminar o reemplazar letras (- o teclas 1-9), también se modifica ambos vectores, logrando que posición y contenido estén sincronizados.
+- Cambios de color (0 para snake y Shift para fondo) afectan los colores de la snake y del entorno, impactando simultáneamente la estética de todos los elementos.
+
+Pregunta: ¿Qué técnicas puedes implementar para optimizar la gestión de memoria y el rendimiento de tu aplicación mientras mantienes una experiencia visual rica y fluida? 
+
+R/ - Evitar recalcular operaciones costosas (como sqrt o conversiones innecesarias) en cada frame.
+- Limitar el número máximo de letras (maxLength) para no sobrecargar la memoria.
+- Actualizar solo las posiciones necesarias, no todo el vector cada vez.
+- Mantener objetos en stack cuando sea posible y usar métodos de limpieza (clear()) para liberar memoria de manera controlada.
+
+EVIDENCIAS RAE 1 Y 2:
+
+Funcionalidades del programa:
+
+Con 'Shift' se cambia el color del fondo, y con '0' se cambia el color del snake.
+
+https://github.com/user-attachments/assets/fbb05d52-dde8-4127-88ba-3d95cfb8e40d
+
+Con '+' y luego cualquier letra (solo letra, si no saldrá un mensaje de tecla inválida.) se agrega una cabeza al snake de la letra presionada.
+
+Con '-' se elimina la primera cabeza que esta en el snake.
+
+Con '1, 2, 3, 4, 5, 6, 7, 8 y 9' seleccionas una cabeza del snake (1 es la cabeza y 9 es la cola) y luego puedes presionar o '-' para eliminar esa cabeza en específico o puedes presionar cualquier letra para reemplazar esa cabeza en específico.
+
+
+https://github.com/user-attachments/assets/990bc644-b5d6-4818-ac68-aa5c5b214c0e
+
+Estas funciones evidencian que el proyecto cumple con los requisitos del reto de manera clara y concreta. La capacidad de cambiar el color del fondo con `Shift` y el color del snake con `0` demuestra interactividad y control dinámico sobre los elementos visuales, cumpliendo con el requisito de interacción con el usuario. El agregado de letras en la cabeza mediante `+` y la validación de que solo se ingresen caracteres alfabéticos refleja la gestión de datos en estructuras dinámicas (vectores) y asegura la coherencia de la obra generativa. La eliminación de la cabeza con `-` y la posibilidad de seleccionar posiciones específicas con `1–9` para eliminar o reemplazar letras muestran un manejo controlado de la memoria y de las estructuras de datos, además de mantener la sincronización entre posiciones y caracteres. En conjunto, estas funcionalidades permiten que la obra sea dinámica, interactiva y correctamente gestionada en memoria, cumpliendo con los objetivos de combinación de estructuras, interactividad y gestión de memoria establecidos en el reto.
+
+Evidencia Reto: https://youtu.be/7di-fqk6FOs  

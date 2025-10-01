@@ -639,7 +639,7 @@ el objeto mantiene el puntero y, al llamar callFunction, salta a la dirección a
 
 Comprender cómo funcionan los punteros a funciones frente a métodos virtuales permite decidir cuándo usar cada uno. Los punteros a funciones son útiles para callbacks simples y reducen overhead, mientras que los métodos virtuales son preferibles cuando se necesita polimorfismo y extensibilidad.
 
-## Sesión 3 Unidad 5 Sistemas Computacionales
+## Sesión 3
 
 **¿Cómo implementa el compilador el encapsulamiento en C++? Si los miembros privados aún ocupan espacio en el objeto, ¿Qué impide que se acceda a ellos desde fuera de la clase?**
 
@@ -803,7 +803,9 @@ int main() {
 secreto1: 42
 secreto2: 3.14
 secreto3: X
-======================**
+======================** 
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 041205" src="https://github.com/user-attachments/assets/4a6bf12d-3101-40c2-a9a9-12bab59db2f6" />
 
 Ahora agregamos reemplazamos esto a int main()
 
@@ -821,6 +823,1138 @@ int main() {
     return 0;
 }
 ```
+
+<img width="863" height="489" alt="Captura de pantalla 2025-09-30 042137" src="https://github.com/user-attachments/assets/acefffbd-05d7-4410-8bb3-281301157ba9" /> 
+
+Esta captura muestra el error de compilación generado al intentar acceder directamente al miembro privado secreto1 desde fuera de la clase. El compilador detecta la violación de las reglas de encapsulamiento y rechaza la compilación, demostrando que la protección existe a nivel de compilador. El mensaje de error específico indica que secreto1 es un miembro privado y no puede ser accedido externamente, validando la primera barrera del encapsulamiento en C++.
+
+Y ahora cambiamos todo el main por esto:
+
+```
+int main() {
+    CajaSecreta caja(42, 3.14f, 'X');
+    
+    // 1. Acceso normal (legal)
+    caja.mostrarSecretos();
+    
+    // 2. HACKEAR el encapsulamiento
+    cout << "=== HACKEANDO ENCAPSULAMIENTO ===" << endl;
+    
+    // Convertimos la dirección de caja a puntero a int
+    int* hacker1 = (int*)&caja;
+    cout << "secreto1 robado: " << *hacker1 << endl;
+    
+    // Avanzamos para llegar al float (normalmente +1 int = 4 bytes)
+    float* hacker2 = (float*)(hacker1 + 1);
+    cout << "secreto2 robado: " << *hacker2 << endl;
+    
+    // Avanzamos para llegar al char (normalmente +1 float = 4 bytes más)
+    char* hacker3 = (char*)(hacker2 + 1);
+    cout << "secreto3 robado: " << *hacker3 << endl;
+    
+    return 0;
+}
+```
+
+Y nos da esto en la consola:
+
+```
+=== ACCESO LEGITIMO ===
+secreto1: 42
+secreto2: 3.14
+secreto3: X
+======================
+=== HACKEANDO ENCAPSULAMIENTO ===
+secreto1 robado: 42
+secreto2 robado: 3.14
+secreto3 robado: X 
+```
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 042340" src="https://github.com/user-attachments/assets/f14e38d6-52d6-4a52-9f7d-ea0388d586b8" /> 
+
+En esta captura se demuestra cómo, utilizando reinterpret_cast y aritmética de punteros, es posible leer los valores de miembros privados a pesar de las restricciones del compilador. El código convierte la dirección del objeto a un puntero de tipo int*, luego avanza la dirección para acceder al float y finalmente al char. Los valores mostrados (42, 3.14, 'X') coinciden exactamente con los inicializados en el constructor, probando que los datos privados están físicamente accesibles en memoria y que el encapsulamiento no provee protección en tiempo de ejecución.
+
+Y ahora por último cambiamos todo el main por esto:
+
+```
+int main() {
+    CajaSecreta caja(42, 3.14f, 'X');
+    
+    // 1. Acceso normal (legal)
+    caja.mostrarSecretos();
+    
+    // 2. HACKEAR el encapsulamiento
+    cout << "=== HACKEANDO ENCAPSULAMIENTO ===" << endl;
+    
+    // Convertimos la dirección de caja a puntero a int
+    int* hacker1 = (int*)&caja;
+    cout << "secreto1 robado: " << *hacker1 << endl;
+    
+    // Avanzamos para llegar al float (normalmente +1 int = 4 bytes)
+    float* hacker2 = (float*)(hacker1 + 1);
+    cout << "secreto2 robado: " << *hacker2 << endl;
+    
+    // Avanzamos para llegar al char (normalmente +1 float = 4 bytes más)
+    char* hacker3 = (char*)(hacker2 + 1);
+    cout << "secreto3 robado: " << *hacker3 << endl;
+    
+    // 3. MODIFICAR los secretos
+    cout << "\n=== MODIFICANDO SECRETOS ===" << endl;
+    *hacker1 = 999;
+    *hacker2 = 99.99f;
+    *hacker3 = 'Z';
+    
+    // Verificar que realmente se modificaron
+    cout << "Despues del hackeo:" << endl;
+    caja.mostrarSecretos();
+    
+    return 0;
+}
+``` 
+
+<img width="1365" height="766" alt="Captura de pantalla 2025-09-30 042529" src="https://github.com/user-attachments/assets/276edb74-829d-477a-b75f-b2bf3bfac5a9" />
+
+Esta captura final evidencia la modificación exitosa de los miembros privados mediante operaciones de memoria de bajo nivel. Los valores originales (42, 3.14, 'X') son cambiados a (999, 99.99, 'Z') directamente en memoria, y cuando se llama al método legítimo mostrarSecretos(), se confirma que los cambios persistieron. Esto demuestra concluyentemente que el encapsulamiento en C++ es una abstracción del compilador, no una restricción física, y que los datos miembros -sin importar su nivel de acceso- residen en regiones de memoria accesibles mediante operaciones de puntero.   
+
+Habiendo demostrado que el encapsulamiento es una barrera lógica más que física, exploramos ahora cómo la herencia organiza los datos en memoria. Si el encapsulamiento controla el acceso vertical (desde fuera hacia dentro), la herencia define la disposición horizontal (entre clases base y derivadas). 
+
+**Experimento 2: Layout de Memoria con Herencia**
+
+**explícame cómo se organiza en memoria un objeto de una clase derivada en C++. ¿Cómo se almacenan los atributos de la clase base y de la derivada?**
+
+El experimento demostró que en C++ los objetos de clases derivadas se organizan en memoria mediante una estructura secuencial donde los miembros de la clase base ocupan las primeras posiciones, seguidos por los miembros propios de la clase derivada. Esta organización se confirma mediante el análisis de direcciones de memoria, que muestra offsets progresivos (0, 4, 8, 12 bytes) correspondientes al tamaño de los tipos de datos. La compatibilidad de punteros entre clase base y derivada funciona porque ambas apuntan a la misma dirección inicial, validando que la herencia se implementa físicamente como composición en memoria rather than como una relación abstracta. 
+
+**Captura 1:**
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 043110" src="https://github.com/user-attachments/assets/3b276bf3-d2fb-4177-86f5-bbd5ce15297f" /> 
+
+**Resultado obtenido:** 
+
+```
+=== ANALISIS DE LAYOUT DE MEMORIA ===
+
+--- Objeto Base ---
+Direccion de b: 000000F540AFFC38
+Direccion de b.baseVar1: 000000F540AFFC38
+Direccion de b.baseVar2: 000000F540AFFC3C
+```
+**Lo que se hizo:** 
+
+Se creó y analizó un objeto de la clase Base con dos miembros públicos baseVar1 y baseVar2. 
+
+**Lo que se esperaba:** 
+
+Que las direcciones de memoria del objeto y sus primeros miembros coincidieran, demostrando que los miembros se almacenan al inicio del objeto. 
+
+**Por qué se esperaba eso:** 
+
+En C++, los miembros de una clase se almacenan en orden de declaración comenzando desde la dirección base del objeto. La coincidencia de &b con &b.baseVar1 confirma que el primer miembro ocupa la posición inicial en memoria.
+
+**Captura 2** 
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 043242" src="https://github.com/user-attachments/assets/b83e5e00-81fe-49bf-8962-51091623d375" /> 
+
+Resultado obtenido: 
+
+```
+=== ANALISIS DE LAYOUT DE MEMORIA ===
+
+--- Objeto Base ---
+Direccion de b: 00000092EEAFF728
+Direccion de b.baseVar1: 00000092EEAFF728
+Direccion de b.baseVar2: 00000092EEAFF72C
+
+--- Objeto Derived ---
+Direccion de d: 00000092EEAFF748
+Direccion de d.baseVar1: 00000092EEAFF748
+Direccion de d.baseVar2: 00000092EEAFF74C
+Direccion de d.derivedVar1: 00000092EEAFF750
+Direccion de d.derivedVar2: 00000092EEAFF754
+```
+
+**Lo que se hizo:** 
+
+Se analizó un objeto de la clase Derived que hereda de Base, mostrando las direcciones de todos sus miembros (heredados y propios). 
+
+**Lo que se esperaba:** 
+
+Que los miembros heredados de Base ocuparan las primeras posiciones en memoria, seguidos por los miembros propios de Derived. 
+
+**Por qué se esperaba eso:** 
+
+La herencia en C++ se implementa mediante composición en memoria, donde la porción de la clase base precede a la porción de la clase derivada. Esto permite la compatibilidad de punteros.
+
+**Captura 3:** 
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 043417" src="https://github.com/user-attachments/assets/b8368e30-fdcd-467e-9b35-a85ee94bf2ee" />
+
+**Resultado obtenido:** 
+
+```
+=== ANALISIS DE LAYOUT DE MEMORIA ===
+
+--- Objeto Base ---
+Direccion de b: 00000043D915F898
+Direccion de b.baseVar1: 00000043D915F898
+Direccion de b.baseVar2: 00000043D915F89C
+
+--- Objeto Derived ---
+Direccion de d: 00000043D915F8B8
+Direccion de d.baseVar1: 00000043D915F8B8
+Direccion de d.baseVar2: 00000043D915F8BC
+Direccion de d.derivedVar1: 00000043D915F8C0
+Direccion de d.derivedVar2: 00000043D915F8C4
+
+--- CALCULO DE OFFSETS ---
+Offset baseVar1: 0 bytes
+Offset baseVar2: 4 bytes
+Offset derivedVar1: 8 bytes
+Offset derivedVar2: 12 bytes
+
+--- Herencia Multinivel (Derived2) ---
+Direccion de d2: 00000043D915F8E8
+Direccion de d2.baseVar1: 00000043D915F8E8
+Direccion de d2.derived2Var: 00000043D915F8F8 
+```
+**Lo que se hizo:** 
+
+Se calcularon los offsets (desplazamientos) de cada miembro respecto al inicio del objeto y se analizó un objeto de Derived2 con herencia multinivel. 
+
+**Lo que se esperaba:** 
+
+Offsets secuenciales (0, 4, 8, 12 bytes) correspondientes al tamaño de int (4 bytes), y que Derived2 continuara el patrón de layout.
+
+**Por qué se esperaba eso:**
+
+Los tipos int típicamente ocupan 4 bytes en sistemas de 32/64 bits. La herencia multinivel extiende el layout existente, añadiendo nuevos miembros al final de la estructura de memoria.
+
+**Captura 4:** 
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 043621" src="https://github.com/user-attachments/assets/e1c1731c-4601-46a4-a8a9-dc3bb0dc3d89" />
+
+Resultado obtenido: 
+
+```
+=== ANALISIS DE LAYOUT DE MEMORIA ===
+
+--- Objeto Base ---
+Direccion de b: 00000029FBEFFBD8
+Direccion de b.baseVar1: 00000029FBEFFBD8
+Direccion de b.baseVar2: 00000029FBEFFBDC
+
+--- Objeto Derived ---
+Direccion de d: 00000029FBEFFBF8
+Direccion de d.baseVar1: 00000029FBEFFBF8
+Direccion de d.baseVar2: 00000029FBEFFBFC
+Direccion de d.derivedVar1: 00000029FBEFFC00
+Direccion de d.derivedVar2: 00000029FBEFFC04
+
+--- CALCULO DE OFFSETS ---
+Offset baseVar1: 0 bytes
+Offset baseVar2: 4 bytes
+Offset derivedVar1: 8 bytes
+Offset derivedVar2: 12 bytes
+
+--- Herencia Multinivel (Derived2) ---
+Direccion de d2: 00000029FBEFFC28
+Direccion de d2.baseVar1: 00000029FBEFFC28
+Direccion de d2.derived2Var: 00000029FBEFFC38
+
+--- COMPATIBILIDAD DE PUNTEROS ---
+Derived*: 00000029FBEFFBF8
+Base* (desde Derived): 00000029FBEFFBF8
+┬┐Misma direccion? SI 
+```
+**Lo que se hizo:** 
+
+Se verificó la compatibilidad de punteros asignando un puntero de clase Base a la dirección de un objeto Derived.
+
+**Lo que se esperaba:** 
+
+Que ambos punteros (Derived* y Base*) apuntaran exactamente a la misma dirección de memoria. 
+
+**Por qué se esperaba eso:** 
+
+En la herencia pública de C++, un objeto derivado contiene una subsección idéntica a la clase base al inicio de su layout. Esto permite que un puntero a la clase base pueda apuntar correctamente a un objeto derivado, facilitando el polimorfismo. 
+
+Una vez entendida la organización física de la herencia, investigamos el mecanismo que permite el comportamiento dinámico: el polimorfismo mediante vtables. Donde la herencia establece relaciones estructurales, el polimorfismo añade flexibilidad comportamental.
+
+**EXPERIMENTO 3: Vtables y Polimorfismo**
+
+**¿Cómo funciona el polimorfismo en C++ a nivel interno? Explica cómo se utilizan las vtables para resolver métodos virtuales en una jerarquía de herencia.**
+
+Este experimento demostró exhaustivamente la implementación interna del polimorfismo en C++ through vtables y vptrs. Se comprobó que: (1) Cada clase con métodos virtuales genera una vtable única conteniendo punteros a sus implementaciones; (2) Cada objeto lleva embebido un vptr que apunta a la vtable de su clase; (3) Las llamadas a métodos virtuales se resuelven mediante indirección through esta tabla; (4) Existe un overhead medible de memoria (típicamente 8 bytes por objeto) y rendimiento (indirección adicional); y (5) El sistema escala consistentemente para jerarquías complejas de herencia, manteniendo el comportamiento polimórfico correcto para cualquier número de clases derivadas.
+
+**Captura 1:** 
+
+
+Primero copiamos todo este codigo en el archivo.cpp y ejecutamos:
+
+```
+#include <iostream>
+using namespace std;
+
+class Animal {
+public:
+    virtual void hacerSonido() {
+        cout << "Sonido generico de animal" << endl;
+    }
+    
+    virtual void comer() {
+        cout << "Comiendo comida generica" << endl;
+    }
+};
+
+class Perro : public Animal {
+public:
+    void hacerSonido() override {
+        cout << "Guau guau!" << endl;
+    }
+    
+    void comer() override {
+        cout << "Comiendo croquetas" << endl;
+    }
+};
+
+int main() {
+    cout << "=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===" << endl;
+    
+    // Demostración básica de polimorfismo
+    Animal* animal1 = new Perro();
+    
+    cout << "Llamadas polimorficas:" << endl;
+    animal1->hacerSonido();
+    animal1->comer();
+    
+    delete animal1;
+    return 0;
+}
+```
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 044706" src="https://github.com/user-attachments/assets/84775459-657e-4f98-803c-5d81437117e5" /> 
+
+**Resultado Obtenido:** 
+
+```
+=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===
+Llamadas polimorficas:
+Guau guau!
+Comiendo croquetas
+```
+
+
+En esta captura inicial se demostró el polimorfismo básico en acción, donde un puntero de tipo Animal* apuntando a un objeto Perro invocó correctamente las implementaciones sobrescritas de hacerSonido() y comer(). Esto validó que las llamadas virtuales se resuelven en tiempo de ejecución según el tipo real del objeto, no según el tipo declarado del puntero, estableciendo la base funcional del polimorfismo en C++.
+
+**Captura 2:** 
+
+Analizar tamaños de objetos y múltiples animales
+
+Modificamos el main() por este código: 
+
+```
+int main() {
+    cout << "=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===" << endl;
+    
+    // NUEVO: Análisis de tamaños
+    cout << "\n--- TAMAÑOS DE OBJETOS ---" << endl;
+    cout << "sizeof(Animal): " << sizeof(Animal) << " bytes" << endl;
+    cout << "sizeof(Perro): " << sizeof(Perro) << " bytes" << endl;
+    cout << "sizeof(int): " << sizeof(int) << " bytes" << endl;
+    cout << "sizeof(void*): " << sizeof(void*) << " bytes" << endl;
+    
+    // NUEVO: Explicación del overhead
+    cout << "\n--- EXPLICACION ---" << endl;
+    cout << "Animal tiene: vptr (" << sizeof(void*) << " bytes) = " 
+         << sizeof(Animal) << " bytes total" << endl;
+    cout << "Perro añade: nada adicional = " << sizeof(Perro) << " bytes total" << endl;
+    
+    // Demostración de polimorfismo con múltiples animales
+    cout << "\n--- POLIMORFISMO CON MULTIPLES ANIMALES ---" << endl;
+    Animal* animales[] = { new Perro(), new Animal() };
+    
+    for (int i = 0; i < 2; i++) {
+        cout << "Animal " << i + 1 << ":" << endl;
+        animales[i]->hacerSonido();
+        animales[i]->comer();
+        cout << endl;
+    }
+    
+    // Limpieza
+    for (int i = 0; i < 2; i++) {
+        delete animales[i];
+    }
+    
+    return 0;
+}
+```
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 044834" src="https://github.com/user-attachments/assets/7d47367a-0dca-41c6-949e-5f84e75acf6b" />
+
+**Resultado Obtenido:** 
+
+```
+=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===
+
+--- TAMA├æOS DE OBJETOS ---
+sizeof(Animal): 8 bytes
+sizeof(Perro): 8 bytes
+sizeof(int): 4 bytes
+sizeof(void*): 8 bytes
+
+--- EXPLICACION ---
+Animal tiene: vptr (8 bytes) = 8 bytes total
+Perro a├▒ade: nada adicional = 8 bytes total
+
+--- POLIMORFISMO CON MULTIPLES ANIMALES ---
+Animal 1:
+Guau guau!
+Comiendo croquetas
+
+Animal 2:
+Sonido generico de animal
+Comiendo comida generica
+```
+
+Esta captura reveló el overhead de memoria introducido por el polimorfismo, mostrando que tanto Animal como Perro ocupan 8 bytes (en sistemas de 64 bits) debido al vptr (puntero a vtable). Simultáneamente, se demostró polimorfismo con múltiples objetos donde un arreglo de Animal* conteniendo diferentes tipos derivados ejecutó las implementaciones correctas para cada tipo, evidenciando la escalabilidad del mecanismo de vtables.
+
+**Captura 3:** 
+
+Añadimos antes del main() esta clase:
+
+```
+class Gato : public Animal {
+public:
+    void hacerSonido() override {
+        cout << "Miau miau!" << endl;
+    }
+    
+    // NO override comer() - usa la version de Animal
+};
+```
+
+Y reemplazamos el main() por este código:
+
+```
+int main() {
+    cout << "=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===" << endl;
+    
+    // Análisis de tamaños
+    cout << "\n--- TAMAÑOS DE OBJETOS ---" << endl;
+    cout << "sizeof(Animal): " << sizeof(Animal) << " bytes" << endl;
+    cout << "sizeof(Perro): " << sizeof(Perro) << " bytes" << endl;
+    cout << "sizeof(Gato): " << sizeof(Gato) << " bytes" << endl;
+    cout << "sizeof(void*): " << sizeof(void*) << " bytes" << endl;
+    
+    // Polimorfismo con 3 tipos diferentes
+    cout << "\n--- POLIMORFISMO CON 3 TIPOS ---" << endl;
+    Animal* animales[] = { new Perro(), new Gato(), new Animal() };
+    
+    for (int i = 0; i < 3; i++) {
+        cout << "Animal " << i + 1 << ":" << endl;
+        animales[i]->hacerSonido();
+        animales[i]->comer();
+        cout << endl;
+    }
+    
+    // NUEVO: Investigación de direcciones de memoria
+    cout << "--- INVESTIGACION DE DIRECCIONES ---" << endl;
+    Perro perro;
+    Gato gato;
+    Animal animal;
+    
+    cout << "Direccion de perro: " << &perro << endl;
+    cout << "Direccion de gato: " << &gato << endl;
+    cout << "Direccion de animal: " << &animal << endl;
+    
+    // Limpieza
+    for (int i = 0; i < 3; i++) {
+        delete animales[i];
+    }
+    
+    return 0;
+}
+```
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 045046" src="https://github.com/user-attachments/assets/957dd108-054f-4e23-b814-4cbd689c4926" /> 
+
+**Resultado Obtenido**
+
+```
+
+=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===
+
+--- TAMA├æOS DE OBJETOS ---
+sizeof(Animal): 8 bytes
+sizeof(Perro): 8 bytes
+sizeof(Gato): 8 bytes
+sizeof(void*): 8 bytes
+
+--- POLIMORFISMO CON 3 TIPOS ---
+Animal 1:
+Guau guau!
+Comiendo croquetas
+
+Animal 2:
+Miau miau!
+Comiendo comida generica
+
+Animal 3:
+Sonido generico de animal
+Comiendo comida generica
+
+--- INVESTIGACION DE DIRECCIONES ---
+Direccion de perro: 0000005032D2F908
+Direccion de gato: 0000005032D2F928
+Direccion de animal: 0000005032D2F948
+```
+
+En esta etapa se expandió el sistema con una tercera clase Gato que sobrescribe solo un método virtual, permitiendo observar el comportamiento mixto donde métodos no sobrescritos heredan la implementación base. El análisis de direcciones de memoria mostró la distribución física de los objetos, mientras el polimorfismo con tres tipos diferentes confirmó que el mecanismo de vtables maneja consistentemente jerarquías complejas de herencia.
+
+**Captura 4:** 
+
+Ahora reemplazamos todo el main() por este código:
+
+```
+int main() {
+    cout << "=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===" << endl;
+    
+    // Análisis de tamaños
+    cout << "\n--- TAMAÑOS DE OBJETOS ---" << endl;
+    cout << "sizeof(Animal): " << sizeof(Animal) << " bytes" << endl;
+    cout << "sizeof(Perro): " << sizeof(Perro) << " bytes" << endl;
+    cout << "sizeof(Gato): " << sizeof(Gato) << " bytes" << endl;
+    cout << "sizeof(int): " << sizeof(int) << " bytes" << endl;
+    cout << "sizeof(void*): " << sizeof(void*) << " bytes" << endl;
+    
+    // Polimorfismo con 3 tipos diferentes
+    cout << "\n--- POLIMORFISMO CON 3 TIPOS ---" << endl;
+    Animal* animales[] = { new Perro(), new Gato(), new Animal() };
+    
+    for (int i = 0; i < 3; i++) {
+        cout << "Animal " << i + 1 << ":" << endl;
+        cout << "  Sonido: ";
+        animales[i]->hacerSonido();
+        cout << "  Comer: ";
+        animales[i]->comer();
+    }
+    
+    // NUEVO: Investigación avanzada de vtable
+    cout << "\n--- INVESTIGACION AVANZADA VTABLE ---" << endl;
+    cout << "ADVERTENCIA: Esto depende del compilador y puede no ser portable" << endl;
+    
+    Perro perro;
+    Gato gato;
+    Animal animal;
+    
+    // En la mayoría de implementaciones, vptr está al inicio del objeto
+    void** vptr_perro = *reinterpret_cast<void***>(&perro);
+    void** vptr_gato = *reinterpret_cast<void***>(&gato);
+    void** vptr_animal = *reinterpret_cast<void***>(&animal);
+    
+    cout << "vptr de Perro: " << vptr_perro << endl;
+    cout << "vptr de Gato: " << vptr_gato << endl;
+    cout << "vptr de Animal: " << vptr_animal << endl;
+    
+    cout << "¿Vtables diferentes? " 
+         << (vptr_perro != vptr_animal ? "SI - Polimorfismo activo" : "NO") << endl;
+    
+    // Demostración del overhead
+    cout << "\n--- OVERHEAD DE POLIMORFISMO ---" << endl;
+    cout << "Costo por objeto: " << sizeof(void*) << " bytes (vptr)" << endl;
+    cout << "Costo por llamada: indireccion adicional through vtable" << endl;
+    
+    // Limpieza
+    for (int i = 0; i < 3; i++) {
+        delete animales[i];
+    }
+    
+    return 0;
+}
+``` 
+
+<img width="1365" height="767" alt="Captura de pantalla 2025-09-30 045208" src="https://github.com/user-attachments/assets/d8c13f84-a519-4574-9112-92e9bb8c25b6" />
+
+**Resultado Obtenido**
+
+```
+=== EXPERIMENTO 3: VTABLES Y POLIMORFISMO ===
+
+--- TAMA├æOS DE OBJETOS ---
+sizeof(Animal): 8 bytes
+sizeof(Perro): 8 bytes
+sizeof(Gato): 8 bytes
+sizeof(int): 4 bytes
+sizeof(void*): 8 bytes
+
+--- POLIMORFISMO CON 3 TIPOS ---
+Animal 1:
+  Sonido: Guau guau!
+  Comer: Comiendo croquetas
+Animal 2:
+  Sonido: Miau miau!
+  Comer: Comiendo comida generica
+Animal 3:
+  Sonido: Sonido generico de animal
+  Comer: Comiendo comida generica
+
+--- INVESTIGACION AVANZADA VTABLE ---
+ADVERTENCIA: Esto depende del compilador y puede no ser portable
+vptr de Perro: 00007FF76CBDBE18
+vptr de Gato: 00007FF76CBDBE60
+vptr de Animal: 00007FF76CBDBDB8
+┬┐Vtables diferentes? SI - Polimorfismo activo
+
+--- OVERHEAD DE POLIMORFISMO ---
+Costo por objeto: 8 bytes (vptr)
+Costo por llamada: indireccion adicional through vtable
+```
+
+La captura final proporcionó evidencia directa del mecanismo interno de vtables, mostrando direcciones diferentes de vptr para cada clase en la jerarquía. Esto demostró físicamente que cada clase con métodos virtuales posee su propia tabla de métodos, y que el vptr embedded en cada objeto apunta a la vtable correspondiente a su tipo real. La diferencia en direcciones de vtable entre Perro, Gato y Animal validó que el polimorfismo se sustenta en esta indirección through tablas de métodos por clase.  
+
+Los experimentos realizados proporcionan una base sólida para entender las implicaciones de rendimiento de las abstracciones OOP. Aplicaremos estos conocimientos en el proyecto de arte generativo, buscando el equilibrio ideal entre diseño elegante y eficiencia computacional. 
+
+# Reto Unidad 5: 
+
+## **Código Beta:**
+
+**Particle.h:** 
+
+```
+#pragma once
+#include "ofMain.h"
+
+class Particle {
+public:
+    Particle(float x, float y, float r);
+
+    void update(float mouseX, float mouseY, char mode);
+    void draw();
+
+    ofVec2f getPosition() const { return position; }
+    ofVec2f getVelocity() const { return velocity; }
+    float getRadius() const { return radius; }
+
+private:
+    ofVec2f position;
+    ofVec2f velocity;
+    float radius;
+    ofColor color;
+};
+```
+
+**Particle.cpp:**
+
+```
+#include "Particle.h"
+
+Particle::Particle(float x, float y, float r) {
+    position.set(x, y);
+    velocity.set(ofRandom(-2, 2), ofRandom(-2, 2));
+    radius = r;
+    color.setHsb(ofRandom(255), 200, 255);
+}
+
+void Particle::update(float mouseX, float mouseY, char mode) {
+    ofVec2f mouse(mouseX, mouseY);
+    ofVec2f dir = mouse - position;
+    float dist = dir.length();
+
+    if (mode == 'c') { // atracción
+        if (dist > 1) {
+            dir.normalize();
+            velocity += dir * 0.05f;
+        }
+    } else if (mode == 'z') { // repulsión
+        if (dist < 200) {
+            dir.normalize();
+            velocity -= dir * 0.2f;
+        }
+    } else if (mode == 'x') { // estáticas (poca fricción)
+        velocity *= 0.9f;
+    }
+
+    position += velocity;
+
+    // rebote contra los bordes
+    if (position.x - radius < 0 || position.x + radius > ofGetWidth()) {
+        velocity.x *= -1;
+    }
+    if (position.y - radius < 0 || position.y + radius > ofGetHeight()) {
+        velocity.y *= -1;
+    }
+}
+
+void Particle::draw() {
+    ofSetColor(color);
+    ofDrawCircle(position, radius);
+}
+
+ofApp.h:
+
+#pragma once
+#include "ofMain.h"
+#include "Particle.h"
+
+class ofApp : public ofBaseApp {
+public:
+    void setup();
+    void update();
+    void draw();
+    void keyPressed(int key);
+
+private:
+    vector<Particle*> particles;
+    char currentMode;
+    float bgHue;
+};
+```
+
+**Particle.h:**
+
+```
+#pragma once
+#include "ofMain.h"
+
+class Particle {
+public:
+    Particle();                                 // constructor por defecto
+    Particle(float x, float y, float r);        // constructor con parámetros
+
+    void update(float mouseX, float mouseY, char mode);
+    void draw();
+
+    // getters / setters
+    ofVec2f getPosition() const { return position; }
+    void setPosition(const ofVec2f& p) { position = p; }
+
+    ofVec2f getVelocity() const { return velocity; }
+    void setVelocity(const ofVec2f& v) { velocity = v; }
+
+    float getRadius() const { return radius; }
+    void setRadius(float r) { radius = r; }
+
+    void randomizeColor();
+
+private:
+    ofVec2f position;
+    ofVec2f velocity;
+    float radius;
+    ofColor color;
+};
+```
+**EVIDENCIA CÓDIGO BETA RETO**
+
+https://www.youtube.com/watch?v=yO765LnTzJI 
+
+**Prompt para ChatGPT:** 
+
+**¿Cómo puedo optimizar mi proyecto de arte generativo en openFrameworks para mejorar el rendimiento? ¿Qué impacto tienen los métodos virtuales y cómo puedo minimizar su sobrecarga?**
+
+Lo que me respondió ChatGPT:
+
+Para optimizar tu proyecto de arte generativo en openFrameworks lo primero es tener en cuenta cómo se están comportando memoria y CPU en tu versión actual (la beta). Al correrla en el perfilador de Visual Studio se nota que el uso de recursos es estable pero todavía hay sobrecarga en estos puntos principales:
+
+**1. Uso de métodos virtuales en cada actualización de partícula.**
+   Los métodos virtuales están pensados para polimorfismo dinámico, pero en un sistema con muchas partículas actualizando su estado cada frame, esa indirecta extra se acumula. Por eso, una de las primeras recomendaciones es dejar los virtuales solo donde sea estrictamente necesario (por ejemplo, si de verdad tienes subclases con comportamientos radicalmente distintos). Para el resto de operaciones (mover, cambiar color, ajustar radio), bastaría con métodos normales.
+
+**2. Cálculos repetidos en `ofApp` que podrían estar encapsulados.**
+   Ahora mismo el control de radio, color y colisiones se maneja en varios lugares. Encapsular estos detalles en la clase `Particle` evita duplicaciones y reduce llamadas. Esto no solo mejora la claridad del código, también baja la carga de CPU.
+
+**3. Fondo y render.**
+   La beta está cambiando los colores del fondo cada frame con valores aleatorios, lo cual genera un “parpadeo” fuerte y además implica operaciones innecesarias de CPU. Para la versión optimizada se puede implementar un degradado o una interpolación suave entre colores, incluso delegando parte del cálculo a la GPU mediante un `mesh` con colores en vértices. Eso mantiene la estética y libera CPU.
+
+**4. Colisiones y atracción/repulsión.**
+   En la versión actual, la fuerza de atracción vs. el rebote del borde está desbalanceada: las partículas tienden a rebotar demasiado en lugar de orbitar o acercarse al mouse. Lo que se puede hacer es normalizar las fuerzas para que ninguna domine de forma exagerada, y además limitar la detección de colisiones a lo esencial (por ejemplo, entre partículas cercanas), evitando cálculos de O(n²) cuando no se necesiten.
+
+**5. Optimización práctica.**
+
+   * Reemplazar bucles con punteros dinámicos por estructuras más simples como `std::vector<Particle>` en vez de `std::vector<Particle*>` cuando no se necesite control manual de memoria.
+   * Usar referencias (`auto& p`) para evitar copias innecesarias en bucles.
+   * Controlar el crecimiento del número de partículas para que no se dispare el consumo de memoria.
+
+En resumen, la optimización en tu proyecto pasa por:
+
+Reducir virtuales innecesarios.**
+Encapsular más lógica en `Particle`.**
+Optimizar el fondo y evitar cálculos redundantes.**
+Balancear mejor las fuerzas de atracción/repulsión.**
+
+La idea es que, si aplicas estos ajustes, la siguiente versión (la optimizada) debería mostrar menos uso de CPU y memoria al compararla en el perfilador, además de un comportamiento visual más controlado y fluido.
+
+# Código Final
+
+**Main.cpp:**
+
+```
+#include "ofMain.h"
+#include "ofApp.h"
+
+//========================================================================
+int main() {
+
+	//Use ofGLFWWindowSettings for more options like multi-monitor fullscreen
+	ofGLWindowSettings settings;
+	settings.setSize(1024, 768);
+	settings.windowMode = OF_WINDOW; //can also be OF_FULLSCREEN
+
+	auto window = ofCreateWindow(settings);
+
+	ofRunApp(window, std::make_shared<ofApp>());
+	ofRunMainLoop();
+
+}
+```
+
+**ofApp.cpp:**
+
+```
+#include "ofApp.h"
+
+//--------------------------------------------------------------
+void ofApp::setup() {
+    ofSetFrameRate(60);
+    ofBackground(0);
+
+    int count = 160;
+    particles.reserve(count);
+    for (int i = 0; i < count; i++) {
+        particles.push_back(new Particle(ofRandomWidth(), ofRandomHeight(), ofRandom(4.0f, 7.0f)));
+    }
+
+    currentMode = 'c';
+    bgHue = ofRandom(255);
+    bgChangeSpeed = 0.02f;
+}
+
+//--------------------------------------------------------------
+void ofApp::update() {
+    // actualizar partículas (fuerzas individuales)
+    for (auto& p : particles) {
+        p->update(ofGetMouseX(), ofGetMouseY(), currentMode);
+    }
+
+    // Colisiones entre partículas (O(n^2) - suficiente para ~200)
+    for (size_t i = 0; i < particles.size(); i++) {
+        for (size_t j = i + 1; j < particles.size(); j++) {
+            Particle* a = particles[i];
+            Particle* b = particles[j];
+
+            ofVec2f diff = a->getPosition() - b->getPosition();
+            float dist = diff.length();
+            float minDist = a->getRadius() + b->getRadius();
+
+            if (dist > 0 && dist < minDist) {
+                // separación simple proporcional a la superposición
+                ofVec2f dir = diff / dist; // normalizado
+                float overlap = (minDist - dist) * 0.5f;
+
+                a->setPosition(a->getPosition() + dir * overlap);
+                b->setPosition(b->getPosition() - dir * overlap);
+
+                // intercambio suave de velocidades (amortiguado)
+                ofVec2f va = a->getVelocity();
+                ofVec2f vb = b->getVelocity();
+
+                a->setVelocity(vb * 0.75f + va * 0.25f);
+                b->setVelocity(va * 0.75f + vb * 0.25f);
+
+                // cambio de color al colisionar
+                a->randomizeColor();
+                b->randomizeColor();
+            }
+        }
+    }
+
+    // fondo: hue avanzando lentamente
+    bgHue += bgChangeSpeed;
+    if (bgHue > 255) bgHue -= 255;
+}
+
+//--------------------------------------------------------------
+void ofApp::draw() {
+    drawBackgroundVignette();
+
+    // dibujar partículas
+    for (auto& p : particles) {
+        p->draw();
+    }
+
+    drawMenu();
+}
+
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key) {
+    if (key == 'c' || key == 'C') currentMode = 'c';
+    if (key == 'z' || key == 'Z') currentMode = 'z';
+    if (key == 'x' || key == 'X') currentMode = 'x';
+
+    if (key == '+' || key == '=') {
+        for (auto& p : particles) {
+            float nr = ofClamp(p->getRadius() + 1.0f, minRadius, maxRadius);
+            p->setRadius(nr);
+        }
+    }
+    if (key == '-') {
+        for (auto& p : particles) {
+            float nr = ofClamp(p->getRadius() - 1.0f, minRadius, maxRadius);
+            p->setRadius(nr);
+        }
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::exit() {
+    for (auto& p : particles) {
+        delete p;
+    }
+    particles.clear();
+}
+
+//--------------------------------------------------------------
+void ofApp::drawBackgroundVignette() {
+    // color base con hue variable, saturación y brillo moderado
+    ofColor center = ofColor::fromHsb(fmod(bgHue, 255.0f), 120, 50);
+    ofColor edge = ofColor::fromHsb(fmod(bgHue + 40.0f, 255.0f), 80, 15);
+
+    ofMesh mesh;
+    mesh.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
+
+    glm::vec3 c(ofGetWidth() * 0.5f, ofGetHeight() * 0.5f, 0.0f);
+    mesh.addVertex(c);
+    mesh.addColor(center);
+
+    int steps = 100;
+    float radius = sqrtf((ofGetWidth() * ofGetWidth()) + (ofGetHeight() * ofGetHeight()));
+
+    mesh.getVertices().reserve(steps + 2);
+    mesh.getColors().reserve(steps + 2);
+
+    for (int i = 0; i <= steps; i++) {
+        float angle = ofMap(i, 0, steps, 0, TWO_PI);
+        float x = c.x + cosf(angle) * radius;
+        float y = c.y + sinf(angle) * radius;
+        glm::vec3 v(x, y, 0.0f);
+        mesh.addVertex(v);
+        mesh.addColor(edge);
+    }
+
+    mesh.draw();
+}
+
+//--------------------------------------------------------------
+void ofApp::drawMenu() {
+    ofSetColor(255);
+    ofDrawBitmapString("Controles:", 18, 22);
+    ofDrawBitmapString("C - Atraccion al mouse (las partículas se acercan)", 18, 42);
+    ofDrawBitmapString("Z - Repulsion del mouse (huyen del mouse)", 18, 62);
+    ofDrawBitmapString("X - Estaticas, se mueven si el mouse empuja", 18, 82);
+    ofDrawBitmapString("+ / - : Aumentar / reducir tamano de particulas (lim: 2 - 15)", 18, 102);
+} 
+```
+
+**ofApp.h:**
+
+```
+#pragma once
+#include "ofMain.h"
+#include "Particle.h"
+
+class ofApp : public ofBaseApp {
+public:
+    void setup();
+    void update();
+    void draw();
+    void keyPressed(int key);
+    void exit();
+
+private:
+    vector<Particle*> particles;
+    char currentMode; // 'c', 'z', 'x'
+
+    float bgHue;
+    float bgChangeSpeed;
+
+    float minRadius = 2.0f;
+    float maxRadius = 15.0f;
+
+    void drawBackgroundVignette();
+    void drawMenu();
+};
+```
+
+**Particle.cpp:**
+
+```
+
+#include "Particle.h"
+
+Particle::Particle() {
+    position.set(ofRandomWidth(), ofRandomHeight());
+    velocity.set(ofRandom(-1.5, 1.5), ofRandom(-1.5, 1.5));
+    radius = 6.0f;
+    randomizeColor();
+}
+
+Particle::Particle(float x, float y, float r) {
+    position.set(x, y);
+    velocity.set(ofRandom(-1.5, 1.5), ofRandom(-1.5, 1.5));
+    radius = r;
+    randomizeColor();
+}
+
+void Particle::update(float mouseX, float mouseY, char mode) {
+    ofVec2f mouse(mouseX, mouseY);
+    ofVec2f dir = mouse - position;
+    float dist = dir.length();
+
+    // Control de fuerzas, moderadas para evitar que todas se amontonen
+    if (mode == 'c') { // atracción
+        if (dist > 1) {
+            dir.normalize();
+            // atenuamos fuerza con distancia para que no se concentren demasiado
+            float strength = ofMap(dist, 0, 300, 0.12f, 0.01f, true);
+            velocity += dir * strength;
+        }
+    }
+    else if (mode == 'z') { // repulsión
+        if (dist < 220 && dist > 1) {
+            dir.normalize();
+            float strength = ofMap(dist, 0, 220, 0.6f, 0.05f, true);
+            velocity -= dir * strength;
+        }
+    }
+    else if (mode == 'x') { // estáticas / empujón
+        if (dist < 60) {
+            if (dist > 0.1f) {
+                dir.normalize();
+                velocity += (position - mouse).getNormalized() * 2.0f; // empujón
+            }
+        }
+        else {
+            // fricción para volver a estado estático
+            velocity *= 0.85f;
+        }
+    }
+
+    // integración
+    position += velocity;
+
+    // limitamos velocidad para estabilidad
+    float maxSpeed = 6.0f;
+    if (velocity.length() > maxSpeed) {
+        velocity.normalize();
+        velocity *= maxSpeed;
+    }
+
+    // rebote con bordes (con correción para que no salgan)
+    if (position.x - radius < 0) {
+        position.x = radius;
+        velocity.x *= -0.7f;
+    }
+    else if (position.x + radius > ofGetWidth()) {
+        position.x = ofGetWidth() - radius;
+        velocity.x *= -0.7f;
+    }
+    if (position.y - radius < 0) {
+        position.y = radius;
+        velocity.y *= -0.7f;
+    }
+    else if (position.y + radius > ofGetHeight()) {
+        position.y = ofGetHeight() - radius;
+        velocity.y *= -0.7f;
+    }
+
+    // ligera amortiguación general
+    velocity *= 0.995f;
+}
+
+void Particle::draw() {
+    ofSetColor(color);
+    ofDrawCircle(position.x, position.y, radius);
+}
+
+void Particle::randomizeColor() {
+    color.setHsb(ofRandom(255), ofRandom(150, 255), ofRandom(200, 255));
+}
+```
+
+**Particle.h:**
+
+```
+#pragma once
+#include "ofMain.h"
+
+class Particle {
+public:
+    Particle();                                 // constructor por defecto
+    Particle(float x, float y, float r);        // constructor con parámetros
+
+    void update(float mouseX, float mouseY, char mode);
+    void draw();
+
+    // getters / setters
+    ofVec2f getPosition() const { return position; }
+    void setPosition(const ofVec2f& p) { position = p; }
+
+    ofVec2f getVelocity() const { return velocity; }
+    void setVelocity(const ofVec2f& v) { velocity = v; }
+
+    float getRadius() const { return radius; }
+    void setRadius(float r) { radius = r; }
+
+    void randomizeColor();
+
+private:
+    ofVec2f position;
+    ofVec2f velocity;
+    float radius;
+    ofColor color;
+}; 
+```
+
+**EVIDENCIA CÓDIGO FINAL RETO UNIDAD 5**
+
+https://youtu.be/FE_OWy9e3FE 
+
+
+Durante el desarrollo de mi proyecto de arte generativo partí de una versión beta que cumplía con el objetivo funcional, pero todavía no estaba optimizada. En esta primera etapa, me enfoqué en aplicar herencia y polimorfismo mediante métodos virtuales en la clase base Particle y sus derivadas. Esto me permitió experimentar cómo las decisiones de diseño OOP afectan directamente el rendimiento, ya que cada actualización de partícula pasaba por la tabla virtual y el consumo de CPU aumentaba de manera perceptible en comparación con implementaciones más simples. 
+
+Con ayuda del perfilador de Visual Studio, medí el uso de memoria y CPU. Ahí noté que la lógica repetida en ofApp y las fuerzas desbalanceadas (atracción, repulsión, rebote) generaban una carga extra. Además, el fondo con cambios aleatorios por frame producía un consumo innecesario y un resultado visual poco agradable. 
+
+El siguiente paso fue la optimización: encapsulé más lógica dentro de la clase Particle (control de radio, color y colisiones), eliminé métodos virtuales que no eran esenciales y reduje cálculos redundantes. También mejoré el fondo implementando una transición más lenta de colores con un efecto de viñeta, lo que no solo dio una estética más coherente sino que redujo el estrés visual y la carga de CPU. 
+
+Otro punto clave fue balancear las fuerzas: bajé la intensidad del rebote en modo de atracción para que las partículas no quedaran rebotando sin acercarse al mouse. Finalmente, añadí funciones interactivas (+/– para cambiar el tamaño de las partículas, modos de color al ser tocadas o rebotar, etc.), lo que me permitió explorar cómo encapsular y abstraer comportamientos sin perder eficiencia. 
+
+Con estas mejoras entendí mejor la relación entre diseño orientado a objetos y rendimiento. El polimorfismo es útil para prototipar, pero cuando se busca eficiencia, es más recomendable encapsular bien las funciones en una sola clase y reducir virtuales innecesarios. Esta experiencia me permitió aplicar de manera consciente los principios de encapsulamiento, herencia y polimorfismo en equilibrio con las necesidades prácticas del proyecto.
+
+**EVIDENCIA RENDIMIENTO CÓDIGO BETA RETO** 
+
+https://youtu.be/sgfx7Ro85S0 
+
+<img width="1147" height="426" alt="Captura de pantalla 2025-09-30 012108" src="https://github.com/user-attachments/assets/f6749cd2-fd28-4cbe-afc5-7096e3aff8cd" /> 
+
+**EVIDENCIA RENDIMIENTO CÓDIGO FINAL RETO**
+
+https://youtu.be/TMXg4V27X04 
+
+<img width="1148" height="481" alt="Captura de pantalla 2025-09-30 011401" src="https://github.com/user-attachments/assets/2eefd103-9164-40f4-b83b-179546d02005" /> 
+
+Al comparar los datos de uso de CPU entre la versión beta y la versión final del programa, se observa una mejora significativa en la optimización del rendimiento. 
+
+En la versión beta, la distribución de recursos estaba menos balanceada: el runtime consumía un 7,4% de CPU, los elementos gráficos un 17,5% y la interfaz de usuario un 22,1%. Esto generaba una carga adicional que limitaba la eficiencia del kernel. 
+
+En la versión final, los cambios en la estructura del código permitieron que el kernel pasara de un 52,8% a un 59,7% de uso, lo cual indica que la mayor parte de la capacidad de cómputo ahora se dedica directamente a la ejecución del núcleo del programa, que es el encargado de manejar la lógica principal. Además, el runtime se redujo drásticamente de 7,4% a 1,5% y los elementos gráficos bajaron de 17,5% a 10,9%, evidenciando que se eliminaron sobrecargas y procesos innecesarios. 
+
+Si bien la interfaz de usuario aumentó ligeramente (de 22,1% a 27,7%), este incremento es esperable, ya que en la versión final se fortalecieron los aspectos visuales y de control. Sin embargo, al estar mejor distribuido el consumo general, este aumento no afecta negativamente el rendimiento. 
+
+El rendimiento mejoró porque se optimizó el manejo de los elementos gráficos y del runtime, lo que redujo la carga innecesaria en segundo plano. Al eliminar cálculos redundantes y simplificar las actualizaciones visuales, se logró que la CPU destinara más recursos al núcleo del programa y a la interfaz, mejorando así la eficiencia general. 
+
+En conclusión, el comportamiento obtenido era lo esperado: el kernel concentra ahora la mayor parte del trabajo, el runtime y los elementos gráficos se optimizaron notablemente, y la aplicación funciona de manera más estable y eficiente en comparación con la versión beta. 
+
+
+
+
+
+
 
 
 

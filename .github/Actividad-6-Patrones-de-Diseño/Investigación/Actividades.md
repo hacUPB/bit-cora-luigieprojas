@@ -37,6 +37,10 @@ Experimenta con el código y realiza algunas modificaciones para entender mejor 
 - Modifica el comportamiento de las partículas.
 - Crea otros eventos para notificar a las partículas. 
 
+Evidencia Sesión 2 Modificada:
+
+https://youtu.be/LRwS-hc8g-A 
+
 Cambios realizados
 
 Se realizaron modificaciones funcionales y estéticas para extender el proyecto, con el fin de:
@@ -190,6 +194,384 @@ Partículas azules grandes que se mueven lentamente.
 Comportamientos dinámicos controlados por teclas (atracción, repulsión, choque, calma, explosión).
 
 Interacción fluida y modular, demostrando la integración de los tres patrones de diseño.
+
+Código Completo:
+
+ofApp.h (modificado):
+
+```
+#pragma once
+
+#include "ofMain.h"
+#include <vector>
+#include <string>
+#include <algorithm>
+
+// Observers / Subject
+class Observer {
+public:
+    virtual void onNotify(const std::string& event) = 0;
+};
+
+class Subject {
+public:
+    void addObserver(Observer* observer);
+    void removeObserver(Observer* observer);
+protected:
+    void notify(const std::string& event);
+private:
+    std::vector<Observer*> observers;
+};
+
+// Forward
+class Particle;
+
+// State base
+class State {
+public:
+    virtual void update(Particle* particle) = 0;
+    virtual void onEnter(Particle* particle) {}
+    virtual void onExit(Particle* particle) {}
+    virtual ~State() = default;
+};
+
+// Particle
+class Particle : public Observer {
+public:
+    Particle();
+    ~Particle();
+
+    void update();
+    void draw();
+    void onNotify(const std::string& event) override;
+    void setState(State* newState);
+
+    ofVec2f position;
+    ofVec2f velocity;
+    float size;
+    ofColor color;
+
+private:
+    State* state;
+};
+
+// Estados existentes
+class NormalState : public State {
+public:
+    void update(Particle* particle) override;
+    void onEnter(Particle* particle) override;
+};
+
+class AttractState : public State {
+public:
+    void update(Particle* particle) override;
+};
+
+class RepelState : public State {
+public:
+    void update(Particle* particle) override;
+};
+
+class StopState : public State {
+public:
+    void update(Particle* particle) override;
+};
+
+// Nuevo estado: colisión (Z)
+class CollisionState : public State {
+public:
+    void update(Particle* particle) override;
+};
+
+// Fábrica
+class ParticleFactory {
+public:
+    static Particle* createParticle(const std::string& type);
+};
+
+// ofApp
+class ofApp : public ofBaseApp, public Subject {
+public:
+    void setup();
+    void update();
+    void draw();
+    void keyPressed(int key);
+
+    // NOTA: hecho público para que CollisionState pueda acceder a todas las partículas
+    std::vector<Particle*> particles;
+};
+```
+ofApp.cpp (modificado): 
+
+```
+#include "ofApp.h"
+
+// ---------------- Subject
+void Subject::addObserver(Observer* observer) {
+    // evitar duplicados simples
+    if (std::find(observers.begin(), observers.end(), observer) == observers.end())
+        observers.push_back(observer);
+}
+
+void Subject::removeObserver(Observer* observer) {
+    observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+}
+
+void Subject::notify(const std::string& event) {
+    for (Observer* observer : observers) {
+        observer->onNotify(event);
+    }
+}
+
+// ---------------- Particle
+Particle::Particle() {
+    position = ofVec2f(ofRandomWidth(), ofRandomHeight());
+    velocity = ofVec2f(ofRandom(-0.5f, 0.5f), ofRandom(-0.5f, 0.5f));
+    size = ofRandom(2, 5);
+    color = ofColor(255);
+    state = new NormalState();
+}
+
+Particle::~Particle() {
+    if (state) delete state;
+}
+
+void Particle::setState(State* newState) {
+    if (state != nullptr) {
+        state->onExit(this);
+        delete state;
+    }
+    state = newState;
+    if (state != nullptr) {
+        state->onEnter(this);
+    }
+}
+
+void Particle::update() {
+    if (state != nullptr) {
+        state->update(this);
+    }
+    // mantener dentro de ventana: invertir velocidad si sale
+    if (position.x < 0 || position.x > ofGetWidth()) velocity.x *= -1;
+    if (position.y < 0 || position.y > ofGetHeight()) velocity.y *= -1;
+}
+
+void Particle::draw() {
+    ofSetColor(color);
+    ofDrawCircle(position, size);
+}
+
+void Particle::onNotify(const std::string& event) {
+    if (event == "attract") {
+        setState(new AttractState());
+    }
+    else if (event == "repel") {
+        setState(new RepelState());
+    }
+    else if (event == "stop") {
+        setState(new StopState());
+    }
+    else if (event == "normal") {
+        setState(new NormalState());
+    }
+    else if (event == "z") {
+        setState(new CollisionState());
+    }
+    else if (event == "explode") {
+        // Aumentar velocidad actual (simple)
+        velocity *= 3.0f;
+    }
+    else if (event == "calm") {
+        // Reducir velocidad
+        velocity *= 0.3f;
+    }
+}
+
+// ---------------- NormalState
+void NormalState::update(Particle* particle) {
+    particle->position += particle->velocity;
+}
+
+void NormalState::onEnter(Particle* particle) {
+    particle->velocity = ofVec2f(ofRandom(-0.5f, 0.5f), ofRandom(-0.5f, 0.5f));
+}
+
+// ---------------- AttractState
+void AttractState::update(Particle* particle) {
+    ofVec2f mousePosition(((ofApp*)ofGetAppPtr())->mouseX, ((ofApp*)ofGetAppPtr())->mouseY);
+    ofVec2f direction = mousePosition - particle->position;
+    if (direction.length() > 0.0001f) direction.normalize();
+    particle->velocity += direction * 0.05f;
+    // aplicar clamp correctamente
+    particle->velocity.x = ofClamp(particle->velocity.x, -3, 3);
+    particle->velocity.y = ofClamp(particle->velocity.y, -3, 3);
+    particle->position += particle->velocity * 0.2f;
+}
+
+// ---------------- RepelState
+void RepelState::update(Particle* particle) {
+    ofVec2f mousePosition(((ofApp*)ofGetAppPtr())->mouseX, ((ofApp*)ofGetAppPtr())->mouseY);
+    ofVec2f direction = particle->position - mousePosition;
+    if (direction.length() > 0.0001f) direction.normalize();
+    particle->velocity += direction * 0.05f;
+    particle->velocity.x = ofClamp(particle->velocity.x, -3, 3);
+    particle->velocity.y = ofClamp(particle->velocity.y, -3, 3);
+    particle->position += particle->velocity * 0.2f;
+}
+
+// ---------------- StopState
+void StopState::update(Particle* particle) {
+    particle->velocity.set(0,0);
+    // opcional: no mover la posición
+}
+
+// ---------------- CollisionState (estado Z)
+// comportamiento simple: si dos partículas se superponen, se separan aplicando fuerza repulsiva.
+// accede al vector particles de ofApp (por eso lo hicimos público).
+void CollisionState::update(Particle* particle) {
+    ofApp* app = (ofApp*)ofGetAppPtr();
+    if (!app) return;
+
+    // Primero aplicar movimiento normal
+    particle->position += particle->velocity;
+
+    // Chequear colisiones con otras partículas
+    for (Particle* other : app->particles) {
+        if (other == particle) continue;
+        ofVec2f diff = particle->position - other->position;
+        float dist = diff.length();
+        float minDist = particle->size + other->size;
+        if (dist > 0 && dist < minDist) {
+            // simple respuesta: empujar cada partícula fuera una de otra proporcionalmente
+            ofVec2f pushDir = diff.normalized();
+            float overlap = (minDist - dist);
+
+            // ajustar posiciones (dividir la corrección para no dar ventaja a una)
+            particle->position += pushDir * (overlap * 0.5f);
+            other->position -= pushDir * (overlap * 0.5f);
+
+            // ajustar velocidades para simular rebote elástico simple (swap con fricción)
+            ofVec2f relative = particle->velocity - other->velocity;
+            float impulse = relative.dot(pushDir);
+            if (impulse < 0) { // si se acercan
+                float restitution = 0.8f; // cuánto "rebota"
+                ofVec2f change = pushDir * ( -impulse * (1.0f + restitution) * 0.5f );
+                particle->velocity += change;
+                other->velocity -= change;
+            }
+
+            // limitar velocidad para estabilidad
+            particle->velocity.x = ofClamp(particle->velocity.x, -6, 6);
+            particle->velocity.y = ofClamp(particle->velocity.y, -6, 6);
+        }
+    }
+
+    // además, mantener partículas dentro de la ventana con rebote ligero
+    if (particle->position.x < 0) { particle->position.x = 0; particle->velocity.x *= -0.5f; }
+    if (particle->position.x > ofGetWidth()) { particle->position.x = ofGetWidth(); particle->velocity.x *= -0.5f; }
+    if (particle->position.y < 0) { particle->position.y = 0; particle->velocity.y *= -0.5f; }
+    if (particle->position.y > ofGetHeight()) { particle->position.y = ofGetHeight(); particle->velocity.y *= -0.5f; }
+}
+
+// ---------------- ParticleFactory
+Particle* ParticleFactory::createParticle(const std::string& type) {
+    Particle* particle = new Particle();
+
+    if (type == "star") {
+        particle->size = ofRandom(2, 4);
+        particle->color = ofColor(255, 200, 100);
+    }
+    else if (type == "shooting_star") {
+        particle->size = ofRandom(3, 6);
+        particle->color = ofColor(0, 255, 0);
+        particle->velocity *= 3.0f;
+    }
+    else if (type == "planet") {
+        particle->size = ofRandom(5, 8);
+        particle->color = ofColor(0, 0, 255);
+    }
+    else if (type == "big_blue") {
+        // NUEVO TIPO: azul claro y más grande
+        particle->size = ofRandom(10, 18); // más grande
+        particle->color = ofColor(173, 216, 230); // light blue
+        // darle una velocidad más calmada
+        particle->velocity *= 0.6f;
+    }
+    return particle;
+}
+
+// ---------------- ofApp
+void ofApp::setup() {
+    ofBackground(0);
+
+    // Partículas star
+    for (int i = 0; i < 100; ++i) {
+        Particle* p = ParticleFactory::createParticle("star");
+        particles.push_back(p);
+        addObserver(p);
+    }
+
+    // shooting stars
+    for (int i = 0; i < 5; ++i) {
+        Particle* p = ParticleFactory::createParticle("shooting_star");
+        particles.push_back(p);
+        addObserver(p);
+    }
+
+    // planets
+    for (int i = 0; i < 10; ++i) {
+        Particle* p = ParticleFactory::createParticle("planet");
+        particles.push_back(p);
+        addObserver(p);
+    }
+
+    // NUEVOS: big_blue
+    for (int i = 0; i < 8; ++i) {
+        Particle* p = ParticleFactory::createParticle("big_blue");
+        particles.push_back(p);
+        addObserver(p);
+    }
+}
+
+void ofApp::update() {
+    for (Particle* p : particles) {
+        p->update();
+    }
+}
+
+void ofApp::draw() {
+    for (Particle* p : particles) {
+        p->draw();
+    }
+}
+
+void ofApp::keyPressed(int key) {
+    if (key == 's') {
+        notify("stop");
+    }
+    else if (key == 'a') {
+        notify("attract");
+    }
+    else if (key == 'r') {
+        notify("repel");
+    }
+    else if (key == 'n') {
+        notify("normal");
+    }
+    else if (key == 'z') {
+        // activar estado Z (colisiones)
+        notify("z");
+    }
+    else if (key == 'e') {
+        // explode: acelera
+        notify("explode");
+    }
+    else if (key == 'c') {
+        // calm: reduce velocidad
+        notify("calm");
+    }
+}
+```
 
 ## **Reto**
 

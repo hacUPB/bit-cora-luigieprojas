@@ -19,7 +19,7 @@ Resultado: una sola acción (pulsar una tecla que llama notify) cambia el compor
 
 **- ¿Qué hace el patrón factory en este caso?** 
 
-R/ La ParticleFactory::createParticle(type) encapsula la creación y configuración inicial de distintas variantes de partículas (star, shooting_star, planet, etc.).
+**R/** La ParticleFactory::createParticle(type) encapsula la creación y configuración inicial de distintas variantes de partículas (star, shooting_star, planet, etc.).
 
 Evita que el ofApp::setup() conozca detalles de inicialización.
 

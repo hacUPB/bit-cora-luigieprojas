@@ -1,4 +1,4 @@
-# Sesión 
+# Sesión 2
 
 Ahora te pediré que te tomes un tiempo para analizar el código y entender su funcionamiento.
 

@@ -4,14 +4,22 @@
 @1978
 D=A
 ```
+
+
+https://github.com/user-attachments/assets/7fef3aed-acce-4e7d-b097-6f0e44f62ac2
+
+
 **2.Guarda en la posición 100 de la RAM el número 69.**
 
 ```
-@69 
-D=A 
-@100 
-M=D 
-```
+@69
+D=A
+@100
+M=D
+``` 
+
+https://github.com/user-attachments/assets/d0caf66c-0d4c-4eda-8e71-e37d434c771c
+
 
 **3. Guarda en la posición 200 de la RAM el contenido de la posición 24 de la RAM**
 
@@ -21,7 +29,8 @@ D=A
 @24
 M=D
 @200
-```
+``` 
+
 **4. Lee lo que hay en la posición 100 de la RAM, resta 15 y guarda el resultado en la posición 100 de la RAM.**
 
 ```
@@ -49,28 +58,35 @@ M=D
 @100
 D;JEQ
 ```
+
+https://github.com/user-attachments/assets/292663c7-3e0e-4d68-b10d-326858c37ab8
+
+
 **7. Si el valor almacenado en la posición 100 de la RAM es menor a 100 salta a la posición 20 de la ROM.**  
 ```
 @100
-D=A
-@R13
-M=D
-@100
 D=M
-@R13
-D=D-M
+@100
+D=D-A
 @20
 D;JLT
 ```
+
+https://github.com/user-attachments/assets/f226ddde-5904-43c6-b037-d05e1b736afb
+
 **8.**
 
 **¿Qué hace este programa?**  
+
+https://github.com/user-attachments/assets/f8f02ce3-c0e2-478b-ab5c-a0c49fe6fe8d
+
 **R/** El programa suma el valor almacenado en `var1` con el valor de `var2` y guarda el resultado en `var3`.
 
 **¿En qué posición de la memoria está `var1`, `var2` y `var3`? ¿Por qué en esas posiciones?**  
 **R/** `var1` está en la posición 16, `var2` en la 17 y `var3` en la 18. Esto pasa porque el ensamblador asigna automáticamente las variables a partir de la dirección 16 de la RAM cuando no se definen previamente.
 
 **9.¿Qué hace este programa?**  
+
 **R/** Inicializa i en 1 y sum en 0, luego le suma i a sum y aumenta i en 1.
 
 **¿En qué parte de la memoria RAM está la variable i y sum? ¿Por qué en esas posiciones?**  
@@ -92,6 +108,10 @@ D=D+D
 M=D
 ```
 **11. ¿Qué hace este programa?**  
+
+
+https://github.com/user-attachments/assets/c73c4bad-3e22-46d9-a144-3a90a0599a15
+
 
 **R/** Inicializa la variable i con 1000 y la va restando de uno en uno hasta llegar a 0. Cuando i vale 0, termina el ciclo y continúa la ejecución en CONT.
 
@@ -121,9 +141,22 @@ D=D+A
 @R4
 M=D
 ```
-**13. Implementa en ensamblador: if R0 >= 0 then R1 = 1 else R1 = -1
+
+https://github.com/user-attachments/assets/51037dfa-50b5-4cc1-b4a2-ac75ba0b808c
+
+**13. Implementa en ensamblador: 
+if R0 >= 0 then R1 = 1 else R1 = -1
 (LOOP)
-goto LOOP**  
+goto LOOP**   
+
+https://github.com/user-attachments/assets/6a74b761-e587-4df7-afb1-5829a9258936 
+
+Acá sí R[0] = 5 R[1] = 1 
+
+https://github.com/user-attachments/assets/32286c3f-e647-4b31-93fe-bd98c35e0fc0
+
+Acá sí R[0] = -3 R[1] = -1 
+
 ```
 @R0
 D=M
@@ -175,6 +208,10 @@ M=M-1
 0;JMP
 (END)
 ```
+
+https://github.com/user-attachments/assets/adc91a28-b413-475c-8f9f-442f52832691
+
+
 **16. Implementa en lenguaje ensamblador el siguiente programa:**
 ```
 int[] arr = new int[10];

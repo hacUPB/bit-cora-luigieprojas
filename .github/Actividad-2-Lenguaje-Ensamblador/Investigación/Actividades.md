@@ -18,7 +18,10 @@ Así, para dibujar en pantalla, se escribe directamente en la RAM empezando desd
 
 ## Actividad 3
 
-Vas a implementar y simular una modificación al reto 20 de la unidad anterior. Si se presiona la letra “d” muestras la imagen que diseñaste en el reto 18. Si no se presiona ninguna tecla, borrarás la imagen.
+Vas a implementar y simular una modificación al reto 20 de la unidad anterior. Si se presiona la letra “d” muestras la imagen que diseñaste en el reto 18. Si no se presiona ninguna tecla, borrarás la imagen. 
+
+https://github.com/user-attachments/assets/364f3758-d1e5-4f8b-b548-bd88633d4b04
+
 
 **R/**  
 ```
@@ -976,3 +979,6 @@ D;JGT
 0;JMP
 
 ```
+
+https://github.com/user-attachments/assets/4e91a1df-820f-4061-961e-dc6bb4e2ecc6
+

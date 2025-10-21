@@ -7,6 +7,46 @@ While (i <= 100){
    i++;
 }
 ```
+
+https://github.com/user-attachments/assets/c9515722-f1a8-48e2-996b-85135796071a
+
+**R/**
+```
+// Suma los primeros 100 números naturales
+// i → @i, sum → @sum
+
+@i
+M=1         // i = 1
+@sum
+M=0         // sum = 0
+
+(LOOP)
+    @i
+    D=M         // D = i
+    @100
+    D=D-A       // D = i - 100
+    @END
+    D;JGT       // Si i > 100, saltar a END
+
+    @i
+    D=M         // D = i
+    @sum
+    M=D+M       // sum = sum + i
+
+    @i
+    M=M+1       // i++
+
+    @LOOP
+    0;JMP       // Repetir ciclo
+
+(END)
+    @END
+    0;JMP       // Fin
+```
+
+El programa fue cargado en el Assembler de Nand2Tetris y se tradujo correctamente sin errores de sintaxis.
+Luego se abrió el archivo .hack resultante en el CPU Emulator, donde se ejecutó paso a paso para verificar el comportamiento de las variables.
+
 - **¿Cómo están implementadas las variables i y sum?**
 - **R/**  i y sum estan implementados al principio siendo declarados para realizar la suma, se inicializa i en 1 para tener una cuenta de los números que van a llegar a 100. Y sum esta puesto en el ciclo para sumarse con i y luego ir aumentando a medida que el ciclo continúe.
 - **¿En qué direcciones de memoria están estas variables?**
@@ -33,8 +73,54 @@ for (int i = 1; i <= 100; i++) {
     sum += i;
 }
 ```
+**3. Escribe un programa en lenguaje ensamblador que implemente el programa anterior.**
 
-**4.Ahora vamos a acercarnos al concepto de puntero. Un puntero es una variable que almacena la dirección de memoria de otra variable. Observa el siguiente programa escrito en C++:
+https://github.com/user-attachments/assets/9da0e0d0-2c97-4b50-ab18-2459deb5e769
+
+R/ 
+```
+// Suma los primeros 100 números usando ciclo for
+
+@sum
+M=0         // sum = 0
+@i
+M=1         // i = 1
+
+(FOR_LOOP)
+    @i
+    D=M
+    @100
+    D=D-A
+    @END
+    D;JGT       // Si i > 100 → fin
+
+    @i
+    D=M
+    @sum
+    M=M+D       // sum += i
+
+    @i
+    M=M+1       // i++
+
+    @FOR_LOOP
+    0;JMP
+
+(END)
+    @END
+    0;JMP
+
+```
+El programa fue ensayado en el Assembler y posteriormente simulado en el CPU Emulator.
+Durante la ejecución, se confirmó que:
+
+- Las variables sum e i fueron almacenadas en RAM[16] y RAM[17] respectivamente.
+- La estructura del ciclo for se ejecutó correctamente, realizando las mismas operaciones de incremento y suma que el ciclo while, pero controladas por una sola sección de salto.
+- En cada iteración, sum aumentaba en el valor de i, hasta llegar a 5050 al finalizar el ciclo.
+
+El programa finalizó en el bucle infinito (END), indicando el término correcto de la rutina.
+La prueba permitió verificar que la implementación en lenguaje ensamblador conserva la lógica del ciclo for y los resultados esperados.
+
+**4.Ahora vamos a acercarnos al concepto de puntero. Un puntero es una variable que almacena la dirección de memoria de otra variable. Observa el siguiente programa escrito en C++:**
        
 ```
     int var = 10;
@@ -61,4 +147,177 @@ Con eso, punt ya está apuntando a la dirección de var. Es decir, no guarda el 
 **R/** Usando el operador *, que sirve para acceder al contenido que hay en la dirección guardada por el puntero.
 Entonces si hago *punt = 20;, estoy diciendo: "Ve a la dirección que tiene punt guardada (que es donde está var) y cambia lo que hay ahí por 20".
 Así que ahora var vale 20, aunque nunca le escribí directamente a var.
+
+**5. Traduce este programa a lenguaje ensamblador:**
+```
+int var = 10;
+int *punt;
+punt = &var;
+*punt = 20;
+``` 
+
+https://github.com/user-attachments/assets/809a302b-f3de-4bb2-adfc-311bdcdeb233 
+
+
+**R/** 
+```
+// Simula puntero que modifica variable var
+
+@var
+M=10        // var = 10
+
+@punt
+M=var       // punt = &var (almacena dirección de var)
+
+@punt
+A=M         // A = contenido de punt → dirección de var
+M=20        // *punt = 20 → var ahora vale 20
+
+(END)
+    @END
+    0;JMP
+```
+
+El código se tradujo y cargó exitosamente en el Assembler sin errores.
+Posteriormente, en el CPU Emulator, se identificaron las siguientes posiciones de memoria:
+
+- var en RAM[16]
+- punt en RAM[17]
+
+Durante la simulación se observó el siguiente comportamiento:
+
+- var fue inicializada con el valor 10.
+- punt almacenó la dirección de memoria 16, correspondiente a var.
+- La instrucción de desreferenciación *punt = 20 actualizó correctamente el contenido de var a 20, confirmando el funcionamiento del puntero.
+
+El programa finalizó correctamente en el bucle (END), demostrando que el puntero en ensamblador logra modificar el contenido de una variable a través de su dirección de memoria. 
+
+7. Traduce este programa a lenguaje ensamblador:
+```
+int var = 10;
+int bis = 5;
+int *p_var;
+p_var = &var;
+bis = *p_var;
+```
+
+https://github.com/user-attachments/assets/00bd536e-7e31-4ecb-aa8f-acd82dbdcacc
+
+
+R/ 
+```
+// int var = 10;
+@10
+D=A
+@var
+M=D
+
+// int bis = 5;
+@5
+D=A
+@bis
+M=D
+
+// int *p_var;  (reservamos dirección)
+@p_var
+M=0
+
+// p_var = &var;
+@var
+D=A
+@p_var
+M=D
+
+// bis = *p_var;
+@p_var
+A=M
+D=M
+@bis
+M=D
+
+(END)
+@END
+0;JMP
+```
+
+Se cargó el código ensamblador en el Assembler y se tradujo sin errores.
+Luego se ejecutó paso a paso en el CPU Emulator.
+Se verificó que las posiciones RAM[16], RAM[17] y RAM[18] correspondieran a las variables var, bis y p_var.
+Después de ejecutar, se comprobó que bis tomó el valor de var (ambas con 10), y que p_var contenía la dirección de var (16).
+Finalmente, el programa entró en un bucle de parada en las posiciones ROM[19–20], indicando que terminó correctamente.
+
+8. 
+- ¿Qué hace esto `int *pvar;`?
+R/ Declara un puntero a entero (guarda una dirección).
+- ¿Qué hace esto `pvar = var;`?
+R/ Aquí se intenta asignar el valor de var, no su dirección.
+Si var = 10, esto sería como decir “pvar apunta a la dirección 10”, lo cual no tiene sentido en C.
+Para que pvar apunte a la variable var, debes usar el operador & (dirección de)
+- ¿Qué hace esto `var2 = *pvar`?
+R/ Guarda la dirección de var en pvar.
+- ¿Qué hace esto `pvar = &var3`? 
+R/ Lee el contenido al que apunta pvar y lo asigna a var2.
+
+9. Considera que el punto de entrada del siguiente programa es la función main, es decir, el programa inicia llamando la función main. Vas a proponer una posible traducción a lenguaje ensamblador de la función suma, cómo llamar a suma y cómo regresar a std::cout << "El valor de c es: " << c << std::endl; una vez suma termine.
+
+```
+#include <iostream>
+
+int suma(int a, int b) {
+   int var = a + b;
+   return var;
+}
+
+
+int main() {
+   int c = suma(6, 9);
+   std::cout << "El valor de c es: " << c << std::endl;
+   return 0;
+}
+```
+
+https://github.com/user-attachments/assets/f49eaea5-5ce5-4016-b38e-18e2327846a5
+
+
+R/ 
+```
+// Simulación de llamada a función suma(a, b)
+// c = suma(6, 9)
+
+@6
+D=A
+@a
+M=D         // a = 6
+
+@9
+D=A
+@b
+M=D         // b = 9
+
+@RETURN
+D=A
+@retAddr
+M=D         // Guardar dir de retorno
+
+@SUMA
+0;JMP       // Llamar función
+
+(RETURN)
+    @c
+    M=D     // c = valor devuelto
+
+(END)
+    @END
+    0;JMP
+
+// --- Función suma(a, b) ---
+(SUMA)
+    @a
+    D=M
+    @b
+    D=D+M   // D = a + b
+    @RETURN
+    0;JMP   // return var (en D)
+```
+
 

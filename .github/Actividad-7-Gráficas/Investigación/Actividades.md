@@ -1,4 +1,4 @@
-## Actividad 01
+ ## Actividad 01
 
 - ¿Qué son los vértices? 
 

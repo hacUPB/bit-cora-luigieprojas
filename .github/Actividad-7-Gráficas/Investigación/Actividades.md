@@ -305,6 +305,9 @@ void main() {
 }
 ```
 
+**Pruebas y Errores:**
+
+<img width="1035" height="767" alt="image" src="https://github.com/user-attachments/assets/d40a894f-53eb-4b6d-8f97-a961a4453820" />
 
 
 

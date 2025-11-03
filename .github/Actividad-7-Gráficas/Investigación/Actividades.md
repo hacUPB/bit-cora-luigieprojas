@@ -186,14 +186,90 @@ https://youtu.be/nAlr0WONmD0
 Ahora vas a pasar información personalizada de tu programa a los shaders. Vas a leer con detenimiento el tutorial Adding Uniforms.
 
 - ¿Qué es un uniform?
+
+R/ Un uniform es una variable global que se declara dentro de un shader y que mantiene el mismo valor durante toda la ejecución del dibujo de una malla o figura.
+Su valor se envía desde el programa principal (C++) hacia el shader antes de ejecutar el render. A diferencia de los atributos (que cambian por vértice o píxel), los uniforms permiten pasar información general, como tiempo, posición del mouse, color o cualquier dato necesario para animaciones o efectos visuales. 
+
 - ¿Cómo funciona el código de aplicación, los shaders y cómo se comunican estos?
+
+R/ En ofApp.cpp, la aplicación crea y configura un shader program:
+```
+shader.load("shadersGL3/shader");
+```
+Esto carga los archivos shader.vert (vertex shader) y shader.frag (fragment shader).
+
+Dentro de draw(), el programa comienza el uso del shader:
+```
+shader.begin();
+```
+Aquí es donde se envían variables al shader:
+```
+shader.setUniform1f("time", ofGetElapsedTimef());
+```
+En este caso se pasa el tiempo transcurrido para animar la onda senoidal.
+
+El vertex shader recibe esa variable time (tipo uniform) y modifica la posición de los vértices:
+```
+float displacementY = sin(time + (position.x / 100.0)) * displacementHeight;
+modifiedPosition.y += displacementY;
+```
+Esto genera una animación en forma de ola en el plano.
+
+Luego, el fragment shader recibe el color global (globalColor) que openFrameworks envía automáticamente cuando llamamos a ofSetColor(colorMix), y lo aplica a cada fragmento (píxel):
+```
+outputColor = globalColor;
+```
+En conjunto, la aplicación (C++) controla los parámetros y los envía a los shaders, que procesan los vértices y colores en la GPU.
+
+Comportamiento de los shaders:
+
+Vertex Shader (shader.vert):
+
+Recibe la posición de cada vértice (in vec4 position;).
+Usa el uniform time para crear un desplazamiento vertical animado con una función seno.
+Modifica la posición de los vértices antes de proyectarlos en pantalla.
+Resultado: genera una animación ondulante (como una ola) en la superficie del plano.
+
+Fragment Shader (shader.frag):
+
+Recibe el color global desde la app (uniform vec4 globalColor).
+Asigna ese color a todos los fragmentos (outputColor = globalColor;).
+Resultado: el color de la figura cambia dependiendo de la posición del mouse (porque el globalColor cambia con ofSetColor(colorMix)).
 
 Modifica el código de la actividad para cambiar el color de cada uno de los píxeles de la pantalla personalizando el fragment shader.
 
+https://github.com/user-attachments/assets/fd58a939-2236-4efd-a41f-e775d088e78e
+
+solo cambié el shader.frag de esta manera:
+
+```
+OF_GLSL_SHADER_HEADER
+
+out vec4 outputColor;
+
+void main()
+{
+    // Color verde puro
+    outputColor = vec4(0.0, 1.0, 0.0, 1.0); // R, G, B, A
+}
+```
+
+El cambio se hizo únicamente en el fragment shader (shader.frag). Antes, el shader tomaba el globalColor que OpenFrameworks enviaba desde ofSetColor(). Ahora, en vez de depender de eso, se fija directamente el color de cada píxel con:
+```
+outputColor = vec4(0.0, 1.0, 0.0, 1.0);
+```
+Esto significa:
+
+R (rojo) = 0.0 -> sin rojo.
+G (verde) = 1.0 -> verde máximo.
+B (azul) = 0.0 -> sin azul.
+A (alfa) = 1.0 -> totalmente opaco.
+
+Shader 03 evidencia:
 
 https://github.com/user-attachments/assets/f9505874-3717-41d5-a6e4-82380e2acdb5
 
-
+Shader 04 evidencia:
 
 https://github.com/user-attachments/assets/35421ded-2de3-4014-a23f-c0b7cb82f860
 
@@ -393,13 +469,54 @@ void main() {
 }
 ```
 
-**Pruebas y Errores:**
+**Explica y muestra cómo probaste la aplicación en ofApp.cpp.**
 
-<img width="1035" height="767" alt="image" src="https://github.com/user-attachments/assets/d40a894f-53eb-4b6d-8f97-a961a4453820" />
+Al principio desactivé los shaders de la aplicación para ver si cargaban correctamente las esferas en 3D, ya que inicialmente solo se mostraba una pantalla negra, lo que indicaba que algo no estaba funcionando.
+Cuando comenté las líneas de shader.begin() y shader.end(), aparecían las tres esferas en colores rojo, verde y azul, lo que me confirmó que las geometrías estaban bien cargadas y que el problema estaba en la carga de los shaders.
 
+Luego realicé algunos cambios en la forma en que se importaban los shaders, asegurándome de que estuvieran ubicados en bin/data/shadersGL3/ y de que OpenFrameworks cargara correctamente los archivos. Después de estos ajustes, la aplicación mostró las esferas correctamente con la textura y el efecto de pulsación activado.
 
+<img width="1035" height="767" alt="image" src="https://github.com/user-attachments/assets/d40a894f-53eb-4b6d-8f97-a961a4453820" /> 
 
+**Explica y muestra cómo probaste el vertex shader.**
 
+Para probar el vertex shader, primero verifiqué que el shader se cargara sin errores en setup() con la línea:
+
+```
+shader.load("shadersGL3/shader");
+```
+
+Luego comprobé que el shader se activara antes de dibujar las esferas:
+
+```
+shader.begin();
+sun.draw();
+earth.draw();
+mars.draw();
+shader.end();
+```
+
+Para asegurarme de que estaba funcionando, observé que las esferas se deformaban ligeramente al pasar el mouse por encima (el efecto de pulsación) y que sus vértices se actualizaban correctamente según el tiempo y la posición del mouse.
+
+**Explica y muestra cómo probaste el fragment shader.**
+
+Para probar el fragment shader, ejecuté la aplicación y confirmé que las texturas de las esferas (sol, tierra y marte) se aplicaban correctamente sin deformaciones.
+Luego modifiqué el fragment shader para incluir el efecto de brillo al pasar el mouse y verifiqué visualmente que cada esfera respondía al movimiento del cursor. 
+
+**Explica y muestra cómo probaste toda la aplicación completa.**
+
+Una vez que los shaders estaban funcionando, ejecuté la aplicación completa para revisar que:
+
+Todas las esferas aparecían con sus texturas correspondientes.
+El efecto de pulsación del vertex shader respondía al tiempo (u_time) y al movimiento del mouse.
+El fragment shader modificaba el color de cada píxel según la posición del mouse, generando el brillo esperado.
+La cámara (ofEasyCam) permitía rotar y mover la vista libremente alrededor de las esferas sin errores.
+
+También tengo una captura de los incios del proyecto donde se ve que los shaders no cargaban correctamente en la aplicación, más por un tema de ubicación de los archivos y porque el codigo estaba en una etapa muy primaria.
+
+![capturareto1era](https://github.com/user-attachments/assets/426e8fcb-1bed-49df-912c-94b78c7bf267)
+
+**EVIDENCIA RETO FUNCIONANDO**
 
 https://github.com/user-attachments/assets/749898f9-99e1-48b3-b718-0804d32bb0da
 

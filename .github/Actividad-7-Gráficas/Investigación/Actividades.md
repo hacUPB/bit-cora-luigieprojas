@@ -114,6 +114,14 @@ Modifica el código de la actividad para cambiar el color de cada uno de los pí
 
 Vas a realizar la última actividad de esta experiencia de aprendizaje. Yo sé que quieres seguir haciendo más, pero tenemos un tiempo muy limitado.
 
+# RETO
+
+
+
+https://github.com/user-attachments/assets/749898f9-99e1-48b3-b718-0804d32bb0da
+
+
+
 Analiza el ejemplo Adding some interactivity.
 
 - ¿Qué hace el código del ejemplo?

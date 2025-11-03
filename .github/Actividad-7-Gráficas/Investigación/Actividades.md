@@ -271,7 +271,11 @@ https://github.com/user-attachments/assets/f9505874-3717-41d5-a6e4-82380e2acdb5
 
 Shader 04 evidencia:
 
-https://github.com/user-attachments/assets/35421ded-2de3-4014-a23f-c0b7cb82f860
+https://github.com/user-attachments/assets/35421ded-2de3-4014-a23f-c0b7cb82f860 
+
+Shader 06 evidencia:
+
+https://github.com/user-attachments/assets/edef85cc-198f-43c5-938e-0f1b01d6d5dc
 
 
 ## Actividad 4

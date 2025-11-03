@@ -90,21 +90,94 @@ Para lograrlo, está diseñada con miles de núcleos que trabajan en paralelo, c
 Mientras la CPU se enfoca en tareas secuenciales, la GPU destaca en el procesamiento masivo paralelo, ideal para gráficos, simulaciones y aprendizaje profundo.
 
 ## Actividad 02 
+Comienza realizando la lectura de la introducción del tutorial Introducing Shaders. Realiza la sección Your First Shader, pero antes de ejecutar el código, realiza un pequeño experimento. Modifica ligeramente el método draw:
+```
+void ofApp::draw(){
+    ofSetColor(255);
 
+    //shader.begin();
+
+    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+
+    //shader.end();
+}
+```
 Observa la salida. 
 
+Esto fue lo que obtuve:
+
+<img width="1267" height="757" alt="image" src="https://github.com/user-attachments/assets/0ffd7e23-5ff0-47ed-80e1-5ae1d94c7595" />
+
+Y esto obtuve cuando ejecuté el código original:
 
 https://github.com/user-attachments/assets/d4bb1b6c-679c-4154-8463-5d9aa714d9ef
-
 
 
 Ahora ejecuta el código original. Analiza los resultados y responde:
 
 - ¿Cómo funciona?
+
+R/ El programa utiliza shaders para modificar la forma en que se dibuja cada píxel de la pantalla.
+Primero, ofApp::draw() dibuja un rectángulo que ocupa toda la ventana, y sobre este rectángulo se aplica un shader, compuesto por dos partes:
+
+un vertex shader, que calcula la posición de los vértices,
+y un fragment shader, que define el color de cada fragmento (píxel).
+
+En este caso, el shader toma la posición del fragmento en la pantalla (gl_FragCoord) y usa sus coordenadas x y y para determinar los valores de los canales de color rojo y verde.
+El resultado es un degradado de colores que cambia en función de la posición del píxel dentro de la ventana. 
+
 - ¿Qué resultados obtuviste?
+R/ Cuando las líneas del shader estaban comentadas, el programa simplemente dibujaba un rectángulo blanco (ya que no había ningún efecto de shader aplicado).
+Al descomentar las líneas shader.begin() y shader.end(), el shader se activó, y la pantalla mostró un degradado colorido, donde los colores variaban del rojo al verde según las coordenadas x e y de la ventana. 
+
 - ¿Estás usando un vertex shader?
+R/ Sí. El vertex shader lo usamos, aunque en este ejemplo no modifica las posiciones de los vértices.
+Su único propósito aquí es pasar la información de transformación estándar (modelViewProjectionMatrix * position) para que el rectángulo se dibuje correctamente en la ventana.
+Sin este shader, los vértices del rectángulo no se procesarían dentro del pipeline programable de OpenGL.
 - ¿Estás usando un fragment shader?
+R/ Sí.
+El fragment shader es el responsable de calcular el color de cada píxel.
+Usa las coordenadas de pantalla (gl_FragCoord) para asignar valores RGB, generando un gradiente de color dinámico.
+Sin el fragment shader, la salida sería simplemente un color plano (por ejemplo, blanco). 
+
 - Analiza el código de los shaders. ¿Qué hace cada uno? 
+R/ (shader.vert): 
+```
+OF_GLSL_SHADER_HEADER
+
+uniform mat4 modelViewProjectionMatrix;
+in vec4 position;
+
+void main() {
+    gl_Position = modelViewProjectionMatrix * position;
+}
+```
+
+Este shader toma los vértices del rectángulo y los transforma con la matriz modelViewProjectionMatrix para colocarlos correctamente en la pantalla.
+No realiza ninguna modificación creativa sobre los vértices; su función es puramente de transformación geométrica estándar. 
+
+(shader.frag): 
+```
+OF_GLSL_SHADER_HEADER
+
+out vec4 outputColor;
+
+void main() {
+    float windowWidth = 1024.0;
+    float windowHeight = 768.0;
+    
+    float r = gl_FragCoord.x / windowWidth;
+    float g = gl_FragCoord.y / windowHeight;
+    float b = 1.0;
+    float a = 1.0;
+    outputColor = vec4(r, g, b, a);
+}
+```
+Calcula los valores de color en función de la posición del píxel.
+gl_FragCoord.x y gl_FragCoord.y devuelven las coordenadas absolutas del píxel dentro de la ventana.
+Al dividir por el ancho y alto de la ventana, se normalizan esos valores entre 0 y 1, permitiendo mapearlos directamente a los canales de color rojo y verde.
+El resultado es una gradiente RGB que varía con la posición del píxel.
+En otras palabras, el fragment shader convierte la posición en color, generando una transición suave entre diferentes tonos.
 
 ## Actividad 03 
 

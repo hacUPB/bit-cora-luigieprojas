@@ -5,7 +5,7 @@
 R/ Los vértices son los puntos que definen la forma de los objetos en 3D.
 Cada vértice contiene información como su posición en el espacio (x, y, z), color, coordenadas de textura y normales.
 A partir de los vértices, la GPU forma triángulos u otras figuras para construir modelos tridimensionales.
-
+ s
 - ¿Con qué figura geométrica se dibuja en 3D? 
 
 R/ En gráficos 3D, todo se dibuja con triángulos.

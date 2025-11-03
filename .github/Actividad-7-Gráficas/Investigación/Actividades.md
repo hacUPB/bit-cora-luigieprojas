@@ -91,7 +91,12 @@ Mientras la CPU se enfoca en tareas secuenciales, la GPU destaca en el procesami
 
 ## Actividad 02 
 
-Observa la salida.
+Observa la salida. 
+
+
+https://github.com/user-attachments/assets/d4bb1b6c-679c-4154-8463-5d9aa714d9ef
+
+
 
 Ahora ejecuta el código original. Analiza los resultados y responde:
 
@@ -101,7 +106,9 @@ Ahora ejecuta el código original. Analiza los resultados y responde:
 - ¿Estás usando un fragment shader?
 - Analiza el código de los shaders. ¿Qué hace cada uno? 
 
-## Actividad 03
+## Actividad 03 
+
+https://youtu.be/nAlr0WONmD0
 
 Ahora vas a pasar información personalizada de tu programa a los shaders. Vas a leer con detenimiento el tutorial Adding Uniforms.
 
@@ -109,6 +116,14 @@ Ahora vas a pasar información personalizada de tu programa a los shaders. Vas a
 - ¿Cómo funciona el código de aplicación, los shaders y cómo se comunican estos?
 
 Modifica el código de la actividad para cambiar el color de cada uno de los píxeles de la pantalla personalizando el fragment shader.
+
+
+https://github.com/user-attachments/assets/f9505874-3717-41d5-a6e4-82380e2acdb5
+
+
+
+https://github.com/user-attachments/assets/35421ded-2de3-4014-a23f-c0b7cb82f860
+
 
 ## Actividad 4
 
